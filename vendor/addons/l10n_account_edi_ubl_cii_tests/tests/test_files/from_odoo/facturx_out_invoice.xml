@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
 <rsm:CrossIndustryInvoice xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100" xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100" xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
   <rsm:ExchangedDocumentContext>
     <ram:GuidelineSpecifiedDocumentContextParameter>
@@ -109,6 +110,7 @@
       </ram:SpecifiedLineTradeSettlement>
     </ram:IncludedSupplyChainTradeLineItem>
     <ram:ApplicableHeaderTradeAgreement>
+      <ram:BuyerReference>ref_partner_2</ram:BuyerReference>
       <ram:SellerTradeParty>
         <ram:Name>partner_1</ram:Name>
         <ram:DefinedTradeContact>

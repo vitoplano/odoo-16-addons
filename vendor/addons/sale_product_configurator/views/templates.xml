@@ -104,6 +104,15 @@
                     <div class="text-muted small">
                         <div t-field="product.description_sale"/>
                         <div class="js_attributes"/>
+                        <div t-if="product_custom_attribute_values">
+                            <t t-foreach="product_custom_attribute_values" t-as="custom_value">
+                                <span t-esc="custom_value.get('attribute_value_name', None)"/>: <span t-esc="custom_value['custom_value']"/>
+                                <input type="hidden" class="variant_custom_value"
+                                       t-att-data-custom_product_template_attribute_value_id="custom_value['custom_product_template_attribute_value_id']"
+                                       t-att-data-attribute_value_name="custom_value.get('attribute_value_name', None)"
+                                       t-att-value="custom_value['custom_value']"/>
+                            </t>
+                        </div>
                     </div>
                     <div>
                         <t t-if="product.product_tmpl_id and not combination">
@@ -116,6 +125,9 @@
                         <t t-else="">
                             <ul class="d-none js_add_cart_variants mb-0" t-att-data-attribute_exclusions="{'exclusions: []'}"/>
                             <div class="d-none oe_unchanged_value_ids" t-att-data-unchanged_value_ids="variant_values" ></div>
+                            <!-- Keep the information to use it later (when leaving the modal window) -->
+                            <div class="d-none no-attribute-info" t-att-data-attribute-value='json.dumps(no_attribute)'></div>
+                            <div class="d-none custom-attribute-info" t-att-data-attribute-value='json.dumps(custom_attribute)'></div>
                         </t>
                     </div>
                 </td>
@@ -137,7 +149,7 @@
                             "widget": "monetary",
                             "display_currency": (pricelist or product).currency_id
                         }'/>
-                    <span class="js_raw_price d-none" t-out="product._get_contextual_price()"/>
+                    <span class="js_raw_price d-none" t-esc="combination_info['price']"/>
                     <p class="css_not_available_msg alert alert-warning">Option not available</p>
                 </td>
             </tr>
@@ -207,7 +219,9 @@
                         <span class="js_raw_price d-none" t-out="combination_info['price']" />
                         <p class="css_not_available_msg alert alert-warning">Option not available</p>
 
-                        <a role="button" href="#" class="js_add btn btn-primary btn-sm"><i class="fa fa-shopping-cart add-optionnal-item"></i> Add to cart</a>
+                        <a role="button" href="#" class="js_add btn btn-primary">
+                            <i class="fa fa-shopping-cart add-optionnal-item"/>
+                        </a>
                         <span class="js_remove d-none">
                             <a role="button" href="#" class="js_remove"><i class="fa fa-trash-o remove-optionnal-item"></i></a>
                         </span>

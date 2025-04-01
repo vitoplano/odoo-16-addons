@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from odoo.addons.base.tests.common import HttpCaseWithUserDemo
 from odoo.addons.website.models.website_visitor import WebsiteVisitor
-from odoo.tests import common, tagged
+from odoo.tests import common, tagged, HttpCase
 
 
 class MockVisitor(common.BaseCase):
@@ -390,3 +390,232 @@ class WebsiteVisitorTests(MockVisitor, HttpCaseWithUserDemo):
                 'url': self.tracked_page_2.url
             })]
         }
+
+    def test_merge_partner_with_visitor_both(self):
+        """ See :meth:`test_merge_partner_with_visitor_single` """
+        # Setup a visitor for demo and none for admin
+        Visitor = self.env['website.visitor']
+        (self.partner_demo + self.partner_admin).visitor_ids.unlink()
+        [visitor_demo, visitor_admin] = Visitor.create([{
+            'partner_id': self.partner_demo.id,
+            'access_token': self.partner_demo.id,
+        }, {
+            'partner_id': self.partner_admin.id,
+            'access_token': self.partner_admin.id,
+        }])
+        # | id | access_token | partner_id |
+        # | -- | ------------ | ---------- |
+        # |  1 |      demo_id |    demo_id |
+        # |    |      1062141 |    1062141 |
+        # |  2 |     admin_id |   admin_id |
+        # |    |      5013266 |    5013266 |
+        self.assertTrue(visitor_demo.partner_id.id == int(visitor_demo.access_token) == self.partner_demo.id)
+        self.assertTrue(visitor_admin.partner_id.id == int(visitor_admin.access_token) == self.partner_admin.id)
+
+        self.env['website.track'].create([{
+            'visitor_id': visitor_demo.id,
+            'url': '/demo'
+        }, {
+            'visitor_id': visitor_admin.id,
+            'url': '/admin'
+        }])
+        self.assertEqual(visitor_demo.website_track_ids.url, '/demo')
+        self.assertEqual(visitor_admin.website_track_ids.url, '/admin')
+
+        # Merge demo partner in admin partner
+        self.env['base.partner.merge.automatic.wizard']._merge(
+            (self.partner_admin + self.partner_demo).ids,
+            self.partner_admin
+        )
+        # Should be
+        # | id | access_token | partner_id |
+        # | -- | ------------ | ---------- |
+        # |  2 |     admin_id |   admin_id |
+        # |    |      5013266 |    5013266 |
+        self.assertTrue(visitor_admin.exists())
+        self.assertFalse(visitor_demo.exists())
+        self.assertFalse(Visitor.search_count([('partner_id', '=', self.partner_demo.id)]),
+                         "The demo visitor should've been merged (and deleted) with the admin one.")
+        # Track check
+        self.assertEqual(visitor_admin.website_track_ids.sorted('url').mapped('url'), ['/admin', '/demo'])
+
+    def test_merge_partner_with_visitor_single(self):
+        """ The partner merge feature of Odoo is auto discovering relations to
+        ``res_partner`` to change the field value, in raw SQL.
+        It will change the ``partner_id`` field of visitor without changing the
+        ``access_token``, which is supposed to be the same value (``partner_id``
+        is just a stored computed field holding the ``access_token`` value if it
+        is an integer value).
+        This partner_id/access_token "de-sync" need to be handled, this is done
+        in ``_update_foreign_keys()`` website override.
+        This test is ensuring that it works as it should.
+
+        There is 2 possible cases:
+
+        1. There is a visitor for partner 1, none for partner 2. Partner 1 is
+           merged into partner 2, making partner_id of visitor from partner 1
+           becoming partner 2.
+           -> The ``access_token`` value should also be updated from 1 to 2.
+        2. There is a visitor for both partners and partner 1 is merged into
+           partner 2.
+           -> Both visitor should be merged too, so data are aggregated into a
+              single visitor.
+
+        Case 1 is tested here.
+        Cade 2 is tested in :meth:`test_merge_partner_with_visitor_both`.
+        """
+        # Setup a visitor for demo and none for admin
+        Visitor = self.env['website.visitor']
+        (self.partner_demo + self.partner_admin).visitor_ids.unlink()
+        visitor_demo = Visitor.create({
+            'partner_id': self.partner_demo.id,
+            'access_token': self.partner_demo.id,
+        })
+        # | id | access_token | partner_id |
+        # | -- | ------------ | ---------- |
+        # |  1 |      demo_id |    demo_id |
+        # |    |      1062141 |    1062141 |
+        self.assertTrue(visitor_demo.partner_id.id == int(visitor_demo.access_token) == self.partner_demo.id)
+
+        # Merge demo partner in admin partner
+        self.env['base.partner.merge.automatic.wizard']._merge(
+            (self.partner_admin + self.partner_demo).ids,
+            self.partner_admin
+        )
+        # This should not happen..
+        # | id | access_token | partner_id |
+        # | -- | ------------ | ---------- |
+        # |  1 |      demo_id |   admin_id | <-- Mismatch
+        # |    |      1062141 |    5013266 |
+        # .. it should be:
+        # | id | access_token | partner_id |
+        # | -- | ------------ | ---------- |
+        # |  1 |     admin_id |   admin_id | <-- No mismatch, became admin_id
+        # |    |      5013266 |    5013266 |
+        self.assertTrue(visitor_demo.partner_id.id == int(visitor_demo.access_token) == self.partner_admin.id,
+                        "The demo visitor should now be linked to the admin partner.")
+        self.assertFalse(Visitor.search_count([('partner_id', '=', self.partner_demo.id)]),
+                         "The demo visitor should've been merged (and deleted) with the admin one.")
+
+
+@tagged('-at_install', 'post_install')
+class TestPortalWizardMultiWebsites(HttpCase):
+    def setUp(self):
+        super().setUp()
+        self.website = self.env['website'].create({
+            'name': 'website_specific_user_account',
+            'specific_user_account': True,
+        })
+        self.other_website = self.env['website'].create({
+            'name': 'other_website_specific_user_account',
+            'specific_user_account': True,
+        })
+        self.email_address = 'email_address@example.com'
+        partner_specific = self.env['res.partner'].create({
+            'name': 'partner_specific',
+            'email': self.email_address,
+            'website_id': self.website.id,
+        })
+        partner_all_websites = self.env['res.partner'].create({
+            'name': 'partner_all_websites',
+            'email': self.email_address,
+        })
+        self.portal_user_specific = self._create_portal_user(partner_specific)
+        self.portal_user_specific.action_grant_access()
+        self.assertTrue(self.portal_user_specific.is_portal)
+        self.portal_user_all_websites = self._create_portal_user(partner_all_websites)
+
+    def test_portal_wizard_multi_websites_1(self):
+        # 1)
+        # It should be possible to grant portal access for two partners that
+        # have the same email address but are linked to different websites that
+        # have the "specific user account" characteristic.
+        partner_specific_other_website = self.env['res.partner'].create({
+            'name': 'partner_specific_other_website',
+            'email': self.email_address,
+            'website_id': self.other_website.id,
+        })
+        portal_user_specific_other_website = self._create_portal_user(partner_specific_other_website)
+        self.assertEqual(portal_user_specific_other_website.email_state, 'ok')
+
+    def test_portal_wizard_multi_websites_2(self):
+        # 2)
+        # It should not be possible to grant portal access for two partners that
+        # have the same email address and are linked to the same website that
+        # has the "specific user account" characteristic.
+        partner_specific_same_website = self.env['res.partner'].create({
+            'name': 'partner_specific_same_website',
+            'email': self.email_address,
+            'website_id': self.website.id,
+        })
+        portal_user_specific_same_website = self._create_portal_user(partner_specific_same_website)
+        self.assertEqual(portal_user_specific_same_website.email_state, 'exist')
+
+    def test_portal_wizard_multi_websites_3(self):
+        # 3)
+        # In this situation, there are two partners with the same email address.
+        # One is linked to a website that has the "specific_user_account"
+        # characteristic and the other is not linked to a website. In this
+        # situation, it should be possible to grant portal access for the second
+        # partner even if the first one is already a portal user.
+        self.assertEqual(self.portal_user_all_websites.email_state, 'ok')
+
+    def test_portal_wizard_multi_websites_4(self):
+        # 4)
+        # In 3), the partner that is linked to a website that has the
+        # "specific_user_account" setting was the first to have the portal
+        # access. This situation is testing the same case than 3) but when the
+        # partner that is not linked to a website is the first to receive the
+        # portal access.
+        other_email_address = 'other_email_address@example.com'
+        partner_specific_other_website = self.env['res.partner'].create({
+            'name': 'partner_specific_other_website',
+            'email': other_email_address,
+            'website_id': self.other_website.id,
+        })
+        portal_user_specific_other_website = self._create_portal_user(partner_specific_other_website)
+        partner_all_websites = self.env['res.partner'].create({
+            'name': 'partner_all_websites',
+            'email': other_email_address,
+        })
+        portal_user_all_websites_other_address = self._create_portal_user(partner_all_websites)
+        portal_user_all_websites_other_address.action_grant_access()
+        self.assertTrue(portal_user_all_websites_other_address.is_portal)
+        self.assertEqual(portal_user_specific_other_website.email_state, 'ok')
+
+    def test_portal_wizard_multi_websites_5(self):
+        # 5)
+        # It should not be possible to grant portal access for two partners that
+        # have the same email address and are not linked to a website.
+        partner_all_websites_second = self.env['res.partner'].create({
+            'name': 'partner_all_websites_second',
+            'email': self.email_address,
+        })
+        portal_user_all_websites_second = self._create_portal_user(partner_all_websites_second)
+        self.portal_user_all_websites.action_grant_access()
+        self.assertTrue(self.portal_user_all_websites.is_portal)
+        self.assertEqual(portal_user_all_websites_second.email_state, 'exist')
+
+    def test_portal_wizard_multi_websites_6(self):
+        # 6)
+        # It should not be possible to grant portal access for a partner that is
+        # not linked to a website if it exists a user with the same email
+        # address that is linked to the current website.
+        partner_specific_current_website = self.env['res.partner'].create({
+            'name': 'partner_specific_current_website',
+            'email': self.email_address,
+            'website_id': self.env['website'].get_current_website().id,
+        })
+        portal_user_specific_current_website = self._create_portal_user(partner_specific_current_website)
+        portal_user_specific_current_website.action_grant_access()
+        self.assertTrue(portal_user_specific_current_website.is_portal)
+        self.assertEqual(self.portal_user_all_websites.email_state, 'exist')
+
+    def _create_portal_user(self, partner):
+        """ Return a portal wizard user from a partner
+        :param partner: the partner from which a portal wizard user has to be
+        created
+        """
+        portal_wizard = self.env['portal.wizard'].with_context(
+            active_ids=[partner.id]).create({})
+        return portal_wizard.user_ids

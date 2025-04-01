@@ -3,9 +3,11 @@
 # 	* base_address_extended
 # 
 # Translators:
-# Slobodan Simić <slsimic@gmail.com>, 2022
 # Uros Kalajdzic <ukalajdzic@gmail.com>, 2022
 # Martin Trigaux, 2022
+# Dragan Vukosavljevic <dragan.vukosavljevic@gmail.com>, 2022
+# Milan Bojovic <mbojovic@outlook.com>, 2023
+# コフスタジオ, 2024
 # 
 msgid ""
 msgstr ""
@@ -13,8 +15,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-02-11 14:34+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Serbian (https://www.transifex.com/odoo/teams/41243/sr/)\n"
+"Last-Translator: コフスタジオ, 2024\n"
+"Language-Team: Serbian (https://app.transifex.com/odoo/teams/41243/sr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -24,7 +26,7 @@ msgstr ""
 #. module: base_address_extended
 #: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
 msgid "<span> - </span>"
-msgstr ""
+msgstr "<span> - </span>"
 
 #. module: base_address_extended
 #: model:ir.model.fields,help:base_address_extended.field_res_country__enforce_cities
@@ -34,12 +36,14 @@ msgid ""
 "Check this box to ensure every address created in that country has a 'City' "
 "chosen in the list of the country's cities."
 msgstr ""
+"Proverite ovu kutiju da biste osigurali da svaka adresa koja se kreira u toj"
+" zemlji ima izabrani 'Grad' sa liste gradova te zemlje."
 
 #. module: base_address_extended
 #: model:ir.actions.act_window,name:base_address_extended.action_res_city_tree
 #: model_terms:ir.ui.view,arch_db:base_address_extended.view_res_country_city_extended_form
 msgid "Cities"
-msgstr ""
+msgstr "Gradovi"
 
 #. module: base_address_extended
 #: model:ir.model,name:base_address_extended.model_res_city
@@ -48,25 +52,25 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base_address_extended.view_city_filter
 #: model_terms:ir.ui.view,arch_db:base_address_extended.view_city_tree
 msgid "City"
-msgstr "Град"
+msgstr "Grad"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_partner__city_id
 #: model:ir.model.fields,field_description:base_address_extended.field_res_users__city_id
 msgid "City ID"
-msgstr ""
+msgstr "Grad ID"
 
 #. module: base_address_extended
 #: model:ir.model,name:base_address_extended.model_res_partner
 msgid "Contact"
-msgstr "Контакт"
+msgstr "Kontakt"
 
 #. module: base_address_extended
 #: model:ir.model,name:base_address_extended.model_res_country
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__country_id
 #: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
 msgid "Country"
-msgstr "Држава"
+msgstr "Zemlja"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__create_uid
@@ -81,7 +85,7 @@ msgstr "Kreirano"
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__display_name
 msgid "Display Name"
-msgstr ""
+msgstr "Naziv za prikaz"
 
 #. module: base_address_extended
 #: model_terms:ir.actions.act_window,help:base_address_extended.action_res_city_tree
@@ -90,35 +94,38 @@ msgid ""
 "                your partner records. Note that an option can be set on each country separately\n"
 "                to enforce any address of it to have a city in this list."
 msgstr ""
+"Prikažite i upravljajte listom svih gradova koji mogu biti dodeljeni\n"
+"                     vašim partnerskim zapisima. Imajte na umu da se opcija može postaviti za svaku zemlju posebno \n"
+"              kako bi se obezbedilo da svaka adresa ima grad sa ove liste."
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_partner__street_number2
 #: model:ir.model.fields,field_description:base_address_extended.field_res_users__street_number2
 msgid "Door"
-msgstr ""
+msgstr "Vrata"
 
 #. module: base_address_extended
 #: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
 msgid "Door #"
-msgstr ""
+msgstr "Vrata #"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_country__enforce_cities
 #: model:ir.model.fields,field_description:base_address_extended.field_res_partner__country_enforce_cities
 #: model:ir.model.fields,field_description:base_address_extended.field_res_users__country_enforce_cities
 msgid "Enforce Cities"
-msgstr ""
+msgstr "Enforce Cities"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_partner__street_number
 #: model:ir.model.fields,field_description:base_address_extended.field_res_users__street_number
 msgid "House"
-msgstr ""
+msgstr "Kuća"
 
 #. module: base_address_extended
 #: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
 msgid "House #"
-msgstr ""
+msgstr "Kuća #"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__id
@@ -128,17 +135,17 @@ msgstr "ID"
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city____last_update
 msgid "Last Modified on"
-msgstr ""
+msgstr "Poslednja izmena dana"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__write_uid
 msgid "Last Updated by"
-msgstr ""
+msgstr "Poslednje izmenio/la"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__write_date
 msgid "Last Updated on"
-msgstr ""
+msgstr "Poslednje ažuriranje dana"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__name
@@ -148,7 +155,7 @@ msgstr "Ime"
 #. module: base_address_extended
 #: model_terms:ir.ui.view,arch_db:base_address_extended.view_city_filter
 msgid "Search City"
-msgstr ""
+msgstr "Pretraži grad"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__state_id
@@ -164,23 +171,23 @@ msgstr "Ulica"
 #. module: base_address_extended
 #: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
 msgid "Street 2..."
-msgstr ""
+msgstr "Ulica 2..."
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_partner__street_name
 #: model:ir.model.fields,field_description:base_address_extended.field_res_users__street_name
 msgid "Street Name"
-msgstr ""
+msgstr "Ime ulice"
 
 #. module: base_address_extended
 #: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
 msgid "Street..."
-msgstr ""
+msgstr "Ulica..."
 
 #. module: base_address_extended
 #: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
 msgid "ZIP"
-msgstr ""
+msgstr "Poštanski broj"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_city__zipcode

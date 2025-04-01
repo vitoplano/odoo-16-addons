@@ -8,6 +8,7 @@ import { isEventHandled, markEventHandled } from '@mail/utils/utils';
 
 import { escape, sprintf } from '@web/core/utils/strings';
 import { url } from '@web/core/utils/urls';
+import session from "web.session";
 
 registerModel({
     name: 'ComposerView',
@@ -146,6 +147,9 @@ registerModel({
             if (this.composerSuggestionListView.activeSuggestionView.suggestable.partner) {
                 Object.assign(updateData, { rawMentionedPartners: link(this.composerSuggestionListView.activeSuggestionView.suggestable.partner) });
             }
+            if (this.composerSuggestionListView.activeSuggestionView.suggestable.cannedResponse) {
+                Object.assign(updateData, { cannedResponses: link(this.composerSuggestionListView.activeSuggestionView.suggestable.cannedResponse) });
+            }
             this.composer.update(updateData);
             for (const composerView of this.composer.composerViews) {
                 composerView.update({ hasToRestoreContent: true });
@@ -223,7 +227,16 @@ registerModel({
         /**
          * Called when clicking on "expand" button.
          */
-        onClickFullComposer() {
+        async onClickFullComposer() {
+            if (this.chatter && this.chatter.isTemporary) {
+                const chatter = this.chatter;
+                const saved = await this.chatter.doSaveRecord();
+                if (!saved) {
+                    return;
+                }
+                chatter.composerView.openFullComposer();
+                return;
+            }
             this.openFullComposer();
         },
         /**
@@ -269,6 +282,9 @@ registerModel({
         onFocusinTextarea() {
             if (!this.exists()) {
                 return;
+            }
+            if (!this.messaging.emojiRegistry.isLoaded && !this.messaging.emojiRegistry.isLoading) {
+                this.messaging.emojiRegistry.loadEmojiData();
             }
             this.update({ isFocused: true });
         },
@@ -510,6 +526,7 @@ registerModel({
 
             const action = {
                 type: 'ir.actions.act_window',
+                name: this.composer.isLog ? this.env._t('Log note') : this.env._t('Compose Email'),
                 res_model: 'mail.compose.message',
                 view_mode: 'form',
                 views: [[false, 'form']],
@@ -558,6 +575,7 @@ registerModel({
                 if (this.threadView && this.threadView.replyingToMessageView && this.threadView.thread !== this.messaging.inbox.thread) {
                     postData.parent_id = this.threadView.replyingToMessageView.message.id;
                 }
+                params.context = Object.assign(params.context || {}, session.user_context);
                 const { threadView = {} } = this;
                 const chatter = this.chatter;
                 const { thread: chatterThread } = this.chatter || {};
@@ -586,7 +604,7 @@ registerModel({
                     threadView.update({ hasAutoScrollOnMessageReceived: true });
                     threadView.addComponentHint('message-posted', { message });
                 }
-                if (chatter && chatter.exists() && chatter.hasParentReloadOnMessagePosted) {
+                if (chatter && chatter.exists() && chatter.hasParentReloadOnMessagePosted && messageData.recipients.length) {
                     chatter.reloadParentView();
                 }
                 if (chatterThread) {
@@ -639,6 +657,15 @@ registerModel({
          * currently uploading or if there is no text content and no attachments.
          */
         async sendMessage() {
+            if (this.chatter && this.chatter.isTemporary) {
+                const chatter = this.chatter;
+                const saved = await this.chatter.doSaveRecord();
+                if (!saved) {
+                    return;
+                }
+                chatter.composerView.sendMessage();
+                return;
+            }
             if (!this.composer.canPostMessage) {
                 if (this.composer.hasUploadingAttachment) {
                     this.messaging.notify({
@@ -656,7 +683,7 @@ registerModel({
                 const command = this._getCommandFromText(this.composer.textInputContent);
                 if (command) {
                     await command.execute({ channel: this.composer.thread, body: this.composer.textInputContent });
-                    if (this.composer.exists()) {
+                    if (this.exists() && this.composer) {
                         this.composer._reset();
                     }
                     return;
@@ -684,6 +711,7 @@ registerModel({
             let data = {
                 body: this._generateMessageBody(),
                 attachment_ids: composer.attachments.concat(this.messageViewInEditing.message.attachments).map(attachment => attachment.id),
+                attachment_tokens: composer.attachments.concat(this.messageViewInEditing.message.attachments).map(attachment => attachment.accessToken),
             };
             const messageViewInEditing = this.messageViewInEditing;
             await messageViewInEditing.message.updateContent(data);
@@ -726,7 +754,7 @@ registerModel({
         _generateEmojisOnHtml(htmlString) {
             for (const emoji of this.messaging.emojiRegistry.allEmojis) {
                 for (const source of emoji.sources) {
-                    const escapedSource = String(source).replace(
+                    const escapedSource = escape(String(source)).replace(
                         /([.*+?=^!:${}()|[\]/\\])/g,
                         '\\$1');
                     const regexp = new RegExp(
@@ -829,9 +857,11 @@ registerModel({
         _getMessageData() {
             return {
                 attachment_ids: this.composer.attachments.map(attachment => attachment.id),
+                attachment_tokens: this.composer.attachments.map(attachment => attachment.accessToken),
                 body: this._generateMessageBody(),
                 message_type: 'comment',
                 partner_ids: this.composer.recipients.map(partner => partner.id),
+                canned_response_ids: this.composer.cannedResponses.map(response => response.id),
             };
         },
         /**

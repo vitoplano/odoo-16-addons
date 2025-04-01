@@ -36,12 +36,11 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      */
     async start() {
         await this._super(...arguments);
-        this.$currentAnimatedText = $();
 
         this.__onSelectionChange = ev => {
             this._toggleAnimatedTextButton();
         };
-        this.$body[0].addEventListener('selectionchange', this.__onSelectionChange);
+        this.$body[0].ownerDocument.addEventListener('selectionchange', this.__onSelectionChange);
 
         // editor_has_snippets is, amongst other things, in charge of hiding the
         // backend navbar with a CSS animation. But we also need to make it
@@ -58,10 +57,28 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      */
     destroy() {
         this._super(...arguments);
-        this.$body[0].removeEventListener('selectionchange', this.__onSelectionChange);
+        this.$body[0].ownerDocument.removeEventListener('selectionchange', this.__onSelectionChange);
         this.$body[0].classList.remove('o_animated_text_highlighted');
         clearTimeout(this._hideBackendNavbarTimeout);
         this.el.ownerDocument.body.classList.remove('editor_has_snippets_hide_backend_navbar');
+    },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * @todo adapt in master. This override will disable the link popover on
+     * "s_share" items in stable versions. It should be replaced simply by
+     * adding the "o_no_link_popover" class in XML.
+     *
+     * @override
+     */
+    async callPostSnippetDrop($target) {
+        if ($target[0].classList.contains('s_share')) {
+            $target[0].classList.add('o_no_link_popover');
+        }
+        return this._super(...arguments);
     },
 
     //--------------------------------------------------------------------------
@@ -79,6 +96,32 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
         FontFamilyPickerUserValueWidget.prototype.fontVariables = fontVariables;
 
         return this._super(...arguments);
+    },
+    /**
+     * @override
+     */
+    _patchForComputeSnippetTemplates($html) {
+        this._super(...arguments);
+
+        // TODO adapt in master: as a stable fix we decided to introduce a new
+        // option for image in grid mode to change the default "cover" display
+        // into "contain" should the user prefer it. Note: to be sure, this
+        // targets all images but is only displayed if the image acts as a grid
+        // image (parent column has the right class).
+        $html.find('[data-js="WebsiteAnimate"]').eq(0).before($(_.str.sprintf(`
+            <div data-js="GridImage" data-selector="img">
+                <we-select string="%s">
+                    <we-button data-change-grid-image-mode="cover">%s</we-button>
+                    <we-button data-change-grid-image-mode="contain">%s</we-button>
+                </we-select>
+            </div>
+        `, _t("Position"), _t("Cover"), _t("Contain"))));
+        // TODO remove me in master
+        $html.find('[data-attribute-name="interval"]')[0].dataset.attributeName = "bsInterval";
+        // TODO adapt in 17.0: changing the `data-apply-to` attribute of the
+        // grid padding option so it is not applied on inner rows.
+        const $gridPaddingOptions = $html.find('[data-css-property="--grid-item-padding-y"], [data-css-property="--grid-item-padding-x"]');
+        $gridPaddingOptions.attr("data-apply-to", ".row.o_grid_mode");
     },
     /**
      * Depending of the demand, reconfigure they gmap key or configure it
@@ -169,7 +212,7 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      */
     async _validateGMapAPIKey(key) {
         try {
-            const response = await fetch(`https://maps.googleapis.com/maps/api/staticmap?center=belgium&size=10x10&key=${key}`);
+            const response = await fetch(`https://maps.googleapis.com/maps/api/staticmap?center=belgium&size=10x10&key=${encodeURIComponent(key)}`);
             const isValid = (response.status === 200);
             return {
                 isValid: isValid,
@@ -238,6 +281,9 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      */
     _addToolbar() {
         this._super(...arguments);
+        if (this.options.enableTranslation) {
+            this._$toolbarContainer[0].querySelector(":scope .o_we_animate_text").classList.add("d-none");
+        }
         this.$('#o_we_editor_toolbar_container > we-title > span').after($(`
             <div class="btn fa fa-fw fa-2x o_we_highlight_animated_text d-none
                 ${this.$body.hasClass('o_animated_text_highlighted') ? 'fa-eye text-success' : 'fa-eye-slash'}"
@@ -246,6 +292,18 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
         `));
         this._toggleAnimatedTextButton();
         this._toggleHighlightAnimatedTextButton();
+    },
+    /**
+    * @override
+    */
+    _checkEditorToolbarVisibility: function (e) {
+        this._super(...arguments);
+        // Close the option's dropdowns manually on outside click if any open.
+        if (this._$toolbarContainer && this._$toolbarContainer.length) {
+            this._$toolbarContainer[0].querySelectorAll(".dropdown-toggle.show").forEach(toggleEl => {
+                Dropdown.getOrCreateInstance(toggleEl).hide();
+            });
+        }
     },
     /**
      * Activates the button to animate text if the selection is in an
@@ -260,7 +318,6 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
         }
         const animatedText = this._getAnimatedTextElement();
         this.$('.o_we_animate_text').toggleClass('active', !!animatedText);
-        this.$currentAnimatedText = animatedText ? $(animatedText) : $();
     },
     /**
      * Displays the button that allows to highlight the animated text if there
@@ -279,6 +336,18 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      */
     _isValidSelection(sel) {
         return sel.rangeCount && [...this.getEditableArea()].some(el => el.contains(sel.anchorNode));
+    },
+
+    /**
+     * The goal here is to disable parents editors for `s_popup` snippets
+     * since they should not display their parents options.
+     * TODO: Update in master to set the `o_no_parent_editor` class in the
+     * snippet's XML.
+     *
+     * @override
+     */
+    _allowParentsEditors($snippet) {
+        return this._super(...arguments) && !$snippet[0].classList.contains("s_popup");
     },
 
     //--------------------------------------------------------------------------
@@ -399,8 +468,9 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
         }
         const editable = this.options.wysiwyg.$editable[0];
         const range = getDeepRange(editable, { splitText: true, select: true, correctTripleClick: true });
-        if (this.$currentAnimatedText.length) {
-            this.$currentAnimatedText.contents().unwrap();
+        const animatedText = this._getAnimatedTextElement();
+        if (animatedText) {
+            $(animatedText).contents().unwrap();
             this.options.wysiwyg.odooEditor.historyResetLatestComputedSelection();
             this._toggleHighlightAnimatedTextButton();
             ev.target.classList.remove('active');
@@ -460,15 +530,32 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      * @private
      */
     _onReloadBundles(ev) {
-        if (this._currentTab === this.tabs.THEME) {
-            const excludeSelector = this.optionsTabStructure.map(element => element[0]).join(', ');
-            for (const editor of this.snippetEditors) {
-                if (!editor.$target[0].matches(excludeSelector)) {
-                    this._mutex.exec(() => editor.destroy());
+        const excludeSelector = this.optionsTabStructure.map(element => element[0]).join(', ');
+        for (const editor of this.snippetEditors) {
+            if (!editor.$target[0].matches(excludeSelector)) {
+                if (this._currentTab === this.tabs.THEME) {
+                    this._mutex.exec(() => {
+                        editor.destroy();
+                    });
+                } else {
+                    this._mutex.exec(async () => {
+                        // TODO In master: add a rerender parameter to
+                        // updateOptionsUI.
+                        Object.values(editor.styles).map(opt => {
+                            opt.rerender = true;
+                        });
+                        await editor.updateOptionsUI();
+                        Object.values(editor.styles).map(opt => {
+                            if (opt.rerender) {
+                                // 'rerender' was irrelevant for option.
+                                delete opt.rerender;
+                            }
+                        });
+                    });
                 }
             }
         }
-    }
+    },
 });
 
 weSnippetEditor.SnippetEditor.include({

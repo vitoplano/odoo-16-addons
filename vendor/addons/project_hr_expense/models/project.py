@@ -17,7 +17,7 @@ class Project(models.Model):
             self.expenses_count = 0
             return
         query = self.env['hr.expense']._search([])
-        query.add_where('hr_expense.analytic_distribution ?| array[%s]', [str(account_id) for account_id in self.analytic_account_id.ids])
+        query.add_where('hr_expense.analytic_distribution ?| %s', [[str(account_id) for account_id in self.analytic_account_id.ids]])
 
         query.order = None
         query_string, query_param = query.select(
@@ -28,7 +28,7 @@ class Project(models.Model):
         self._cr.execute(query_string, query_param)
         data = {int(record.get('account_id')): record.get('expense_count') for record in self._cr.dictfetchall()}
         for project in self:
-            project.expenses_count = data.get(self.analytic_account_id.id, 0)
+            project.expenses_count = data.get(project.analytic_account_id.id, 0)
 
     # ----------------------------
     #  Actions
@@ -68,6 +68,16 @@ class Project(models.Model):
         sequence_per_invoice_type['expenses'] = 11
         return sequence_per_invoice_type
 
+    def _get_already_included_profitability_invoice_line_ids(self):
+        # As both purchase orders and expenses (paid by employee) create vendor bills,
+        # we need to make sure they are exclusive in the profitability report.
+        move_line_ids = super()._get_already_included_profitability_invoice_line_ids()
+        query = self.env['account.move.line'].sudo()._search([
+            ('move_id.expense_sheet_id', '!=', False),
+            ('id', 'not in', move_line_ids),
+        ])
+        return move_line_ids + list(query)
+
     def _get_expenses_profitability_items(self, with_action=True):
         if not self.analytic_account_id:
             return {}
@@ -87,10 +97,10 @@ class Project(models.Model):
         }
         if can_see_expense:
             args = [section_id, [('id', 'in', expense_data['ids'])]]
-            if expense_data['ids']:
-                args.append(expense_data['ids'])
+            if len(expense_data['ids']) == 1:
+                args.append(expense_data['ids'][0])
             action = {'name': 'action_profitability_items', 'type': 'object', 'args': json.dumps(args)}
-            expense_profitability_items['action'] = action
+            expense_profitability_items['costs']['action'] = action
         return expense_profitability_items
 
     def _get_profitability_aal_domain(self):

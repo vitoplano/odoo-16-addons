@@ -5,16 +5,17 @@
 # Translators:
 # Martin Trigaux, 2022
 # Cécile Collart <cco@odoo.com>, 2022
-# Jolien De Paepe, 2022
+# Jolien De Paepe, 2023
+# Manon Rondou, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 15.5alpha1\n"
+"Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-20 09:02+0000\n"
+"POT-Creation-Date: 2024-02-06 13:32+0000\n"
 "PO-Revision-Date: 2022-09-22 05:56+0000\n"
-"Last-Translator: Jolien De Paepe, 2022\n"
-"Language-Team: French (https://www.transifex.com/odoo/teams/41243/fr/)\n"
+"Last-Translator: Manon Rondou, 2024\n"
+"Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -73,7 +74,7 @@ msgid ""
 "<span>Email</span>\n"
 "                            <span> *</span>"
 msgstr ""
-"<span>Email</span>\n"
+"<span>E-mail</span>\n"
 "                            <span> *</span>"
 
 #. module: website_event_booth
@@ -98,7 +99,7 @@ msgstr "Réserver mes stands"
 #. module: website_event_booth
 #: model_terms:ir.ui.view,arch_db:website_event_booth.event_type_view_form
 msgid "Booth Menu Item"
-msgstr "Élément de menu du stand"
+msgstr "Rubrique sur les stands"
 
 #. module: website_event_booth
 #: model:ir.model.fields,field_description:website_event_booth.field_event_event__booth_menu
@@ -106,14 +107,14 @@ msgid "Booth Register"
 msgstr "Réservation de stand"
 
 #. module: website_event_booth
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_event_booth/static/src/xml/event_booth_registration_templates.xml:0
 #, python-format
 msgid "Booth Registration completed!"
 msgstr "Réservation du stand réussie !"
 
 #. module: website_event_booth
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_event_booth/static/src/js/booth_register.js:0
 #, python-format
 msgid "Booth registration failed."
@@ -160,6 +161,7 @@ msgid "Exhibition Map"
 msgstr "Plan du salon"
 
 #. module: website_event_booth
+#. odoo-python
 #: code:addons/website_event_booth/models/event_event.py:0
 #: model_terms:ir.ui.view,arch_db:website_event_booth.event_booth_layout
 #, python-format
@@ -169,12 +171,12 @@ msgstr "Réservez un stand"
 #. module: website_event_booth
 #: model:ir.model.fields,field_description:website_event_booth.field_website_event_menu__menu_type
 msgid "Menu Type"
-msgstr "Type de Menu"
+msgstr "Type de menu"
 
 #. module: website_event_booth
 #: model_terms:ir.ui.view,arch_db:website_event_booth.event_booth_registration_details
 msgid "Mobile"
-msgstr "Mobile"
+msgstr "Téléphone portable"
 
 #. module: website_event_booth
 #: model_terms:ir.ui.view,arch_db:website_event_booth.event_booth_registration_details
@@ -182,7 +184,7 @@ msgid "Phone"
 msgstr "Téléphone"
 
 #. module: website_event_booth
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_event_booth/static/src/js/booth_register.js:0
 #, python-format
 msgid "Please fill out the form correctly."
@@ -194,7 +196,7 @@ msgid "Sorry, all the booths are sold out."
 msgstr "Désolé, tous les stands sont épuisés."
 
 #. module: website_event_booth
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_event_booth/static/src/js/booth_register.js:0
 #, python-format
 msgid "The booth category doesn't exist."
@@ -213,12 +215,12 @@ msgstr "Visualiser le plan"
 #. module: website_event_booth
 #: model:ir.model,name:website_event_booth.model_website_event_menu
 msgid "Website Event Menu"
-msgstr "Menu des événements du site Web"
+msgstr "Menu des événements du site web"
 
 #. module: website_event_booth
 #: model_terms:ir.ui.view,arch_db:website_event_booth.event_booth_layout
 msgid "check our"
-msgstr "allez voir notre"
+msgstr "aller voir notre"
 
 #. module: website_event_booth
 #: model_terms:ir.ui.view,arch_db:website_event_booth.event_booth_layout

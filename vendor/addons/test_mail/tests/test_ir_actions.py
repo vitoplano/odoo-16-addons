@@ -41,7 +41,7 @@ class TestServerActionsEmail(TestMailCommon, TestServerActionsBase):
         mail = self.env['mail.mail'].sudo().search([('subject', '=', 'About TestingPartner')])
         self.assertEqual(len(mail), 1)
         self.assertTrue(mail.auto_delete)
-        self.assertEqual(mail.body, '<p>Hello TestingPartner</p>')
+        self.assertEqual(mail.body_html, '<p>Hello TestingPartner</p>')
         self.assertFalse(mail.is_notification)
         with self.mock_mail_gateway(mail_unlink_sent=True):
             mail.send()
@@ -110,6 +110,22 @@ class TestServerActionsEmail(TestMailCommon, TestServerActionsBase):
             'activity_user_type': 'specific',
             'activity_type_id': self.env.ref('mail.mail_activity_data_meeting').id,
             'activity_summary': 'TestNew',
+        })
+        before_count = self.env['mail.activity'].search_count([])
+        run_res = self.action.with_context(self.context).run()
+        self.assertFalse(run_res, 'ir_actions_server: create next activity action correctly finished should return False')
+        self.assertEqual(self.env['mail.activity'].search_count([]), before_count + 1)
+        self.assertEqual(self.env['mail.activity'].search_count([('summary', '=', 'TestNew')]), 1)
+
+    def test_action_next_activity_due_date(self):
+        """ Make sure we don't crash if a due date is set without a type. """
+        self.action.write({
+            'state': 'next_activity',
+            'activity_user_type': 'specific',
+            'activity_type_id': self.env.ref('mail.mail_activity_data_meeting').id,
+            'activity_summary': 'TestNew',
+            'activity_date_deadline_range': 1,
+            'activity_date_deadline_range_type': False,
         })
         before_count = self.env['mail.activity'].search_count([])
         run_res = self.action.with_context(self.context).run()

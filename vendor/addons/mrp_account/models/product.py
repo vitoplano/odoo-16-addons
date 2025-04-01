@@ -58,7 +58,11 @@ class ProductProduct(models.Model):
         for bom_line, moves_list in groupby(stock_moves.filtered(lambda sm: sm.state != 'cancel'), lambda sm: sm.bom_line_id):
             if bom_line not in bom_lines:
                 for move in moves_list:
-                    value += move.product_qty * move.product_id._compute_average_price(qty_invoiced * move.product_qty, qty_to_invoice * move.product_qty, move, is_returned=is_returned)
+                    component_quantity = next(
+                        (bml.product_qty for bml in move.product_id.bom_line_ids if bml in bom_lines),
+                        1
+                    )
+                    value += component_quantity * move.product_id._compute_average_price(qty_invoiced * move.product_qty, qty_to_invoice * move.product_qty, move, is_returned=is_returned)
                 continue
             line_qty = bom_line.product_uom_id._compute_quantity(bom_lines[bom_line]['qty'], bom_line.product_id.uom_id)
             moves = self.env['stock.move'].concat(*moves_list)
@@ -77,8 +81,7 @@ class ProductProduct(models.Model):
                 continue
 
             duration_expected = (
-                opt.workcenter_id.time_start +
-                opt.workcenter_id.time_stop +
+                opt.workcenter_id._get_expected_duration(self) +
                 opt.time_cycle * 100 / opt.workcenter_id.time_efficiency)
             total += (duration_expected / 60) * opt._total_cost_per_hour()
 

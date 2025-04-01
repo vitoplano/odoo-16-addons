@@ -3,7 +3,7 @@
 
 {
     'name': 'Project',
-    'version': '1.2',
+    'version': '1.3',
     'website': 'https://www.odoo.com/app/project',
     'category': 'Services/Project',
     'sequence': 45,
@@ -83,6 +83,7 @@
             'project/static/src/js/portal_rating.js',
         ],
         'web.qunit_suite_tests': [
+            'project/static/src/project_sharing/components/portal_file_input/portal_file_input.js',
             'project/static/tests/**/*.js',
         ],
         'web.assets_tests': [
@@ -139,7 +140,6 @@
             'web/static/src/legacy/scss/kanban_examples_dialog.scss',
             'web/static/src/legacy/scss/kanban_column_progressbar.scss',
             'web/static/src/legacy/scss/kanban_view.scss',
-            'web/static/src/legacy/scss/progress_bar.scss',
 
             'base/static/src/scss/res_partner.scss',
 

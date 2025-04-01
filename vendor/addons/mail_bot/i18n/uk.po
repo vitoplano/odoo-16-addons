@@ -4,6 +4,7 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
+# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2024
 # 
 msgid ""
 msgstr ""
@@ -11,8 +12,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-09-20 09:02+0000\n"
 "PO-Revision-Date: 2022-09-22 05:53+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Ukrainian (https://www.transifex.com/odoo/teams/41243/uk/)\n"
+"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2024\n"
+"Language-Team: Ukrainian (https://app.transifex.com/odoo/teams/41243/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -83,12 +84,14 @@ msgstr "Хммм..."
 #, python-format
 msgid ""
 "I am a simple bot, but if that's a dog, he is the cutest 😊 "
-"<br/>Congratulations, you finished this tour. You can now <b>close this chat"
-" window</b>. Enjoy discovering Odoo."
+"<br/>Congratulations, you finished this tour. You can now <b>close this "
+"conversation</b> or start the tour again with typing <span "
+"class=\"o_odoobot_command\">start the tour</span>. Enjoy discovering Odoo!"
 msgstr ""
-"Я простий бот, але якщо це собака, то вона дуже мила 😊 <br/>Вітаємо, ви "
-"завершили ознайомчий тур. Тепер ви можете <b>закрити це вікно чату</b>. "
-"Насолоджуйтесь  Odoo."
+"Я простий бот, але якщо це собака, то він наймиліший 😊 <br/>Вітаємо, ви "
+"закінчили цей тур. Тепер ви можете <b>закрити цю розмову</b> або розпочати "
+"тур заново, ввівши <span class=\"o_odoobot_command\">start the tour</span>. "
+"Насолоджуйтесь відкриттям Odoo!"
 
 #. module: mail_bot
 #: code:addons/mail_bot/models/mail_bot.py:0
@@ -105,7 +108,7 @@ msgid ""
 msgstr ""
 "Я не достатньо розумний, щоб відповісти на ваше запитання.<br/>Щоби "
 "переглянути ознайомчий тур, запитайте: <span "
-"class=\"o_odoobot_command\">start the tour</span>."
+"class=\"o_odoobot_command\">розпочати тур</span>."
 
 #. module: mail_bot
 #: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__idle
@@ -157,7 +160,7 @@ msgstr "Помилка Odoobot"
 #. module: mail_bot
 #: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__onboarding_attachement
 msgid "Onboarding attachment"
-msgstr ""
+msgstr "Вхідне прикріплення"
 
 #. module: mail_bot
 #: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__onboarding_command

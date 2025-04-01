@@ -20,7 +20,7 @@ from odoo.http import request
 from odoo.osv import expression
 from odoo.tools.misc import get_lang
 from odoo.tools import lazy
-
+from odoo.exceptions import UserError
 
 class WebsiteEventController(http.Controller):
 
@@ -62,7 +62,7 @@ class WebsiteEventController(http.Controller):
         order = 'date_begin'
         if searches.get('date', 'upcoming') == 'old':
             order = 'date_begin desc'
-        order = 'is_published desc, ' + order
+        order = 'is_published desc, ' + order + ', id desc'
         search = searches.get('search')
         event_count, details, fuzzy_search_term = website._search_with_fuzzy("events", search,
             limit=page * step, order=order, options=options)
@@ -149,8 +149,12 @@ class WebsiteEventController(http.Controller):
         if '.' not in page:
             page = 'website_event.%s' % page
 
+        view = request.env["website.event.menu"].sudo().search([
+            ("event_id", "=", event.id), ("view_id.key", "ilike", page)], limit=1).view_id
+
         try:
             # Every event page view should have its own SEO.
+            page = view.key if view else page
             values['seo_object'] = request.website.get_template(page)
             values['main_object'] = event
         except ValueError:
@@ -259,6 +263,9 @@ class WebsiteEventController(http.Controller):
         """
         allowed_fields = request.env['event.registration']._get_website_registration_allowed_fields()
         registration_fields = {key: v for key, v in request.env['event.registration']._fields.items() if key in allowed_fields}
+        for ticket_id in list(filter(lambda x: x is not None, [form_details[field] if 'event_ticket_id' in field else None for field in form_details.keys()])):
+            if int(ticket_id) not in event.event_ticket_ids.ids and len(event.event_ticket_ids.ids) > 0:
+                raise UserError(_("This ticket is not available for sale for this event"))
         registrations = {}
         global_values = {}
         for key, value in form_details.items():

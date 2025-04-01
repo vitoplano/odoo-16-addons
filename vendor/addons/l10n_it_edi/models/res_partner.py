@@ -14,7 +14,7 @@ class ResPartner(models.Model):
 
     l10n_it_pec_email = fields.Char(string="PEC e-mail")
     l10n_it_codice_fiscale = fields.Char(string="Codice Fiscale", size=16)
-    l10n_it_pa_index = fields.Char(string="PA index",
+    l10n_it_pa_index = fields.Char(string="Destination Code",
         size=7,
         help="Must contain the 6-character (or 7) code, present in the PA\
               Index in the information relative to the electronic invoicing service,\
@@ -28,7 +28,7 @@ class ResPartner(models.Model):
 
         ('l10n_it_pa_index',
             "CHECK(l10n_it_pa_index IS NULL OR l10n_it_pa_index = '' OR LENGTH(l10n_it_pa_index) >= 6)",
-            "PA index must have between 6 and 7 characters."),
+            "Destination Code must have between 6 and 7 characters."),
     ]
 
     @api.model
@@ -39,10 +39,14 @@ class ResPartner(models.Model):
 
     @api.onchange('vat', 'country_id')
     def _l10n_it_onchange_vat(self):
-        if not self.l10n_it_codice_fiscale and self.vat and (self.country_id.code == "IT" or self.vat.startswith("IT")):
+        if self.vat and (
+            self.country_code == "IT"
+            if self.country_code
+            else self.vat.startswith("IT")
+        ):
             self.l10n_it_codice_fiscale = self._l10n_it_normalize_codice_fiscale(self.vat)
-        elif self.country_id.code not in [False, "IT"]:
-            self.l10n_it_codice_fiscale = ""
+        else:
+            self.l10n_it_codice_fiscale = False
 
     @api.constrains('l10n_it_codice_fiscale')
     def validate_codice_fiscale(self):

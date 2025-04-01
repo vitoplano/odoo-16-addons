@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from odoo import fields
+from odoo import fields, Command
 from odoo.tests.common import TransactionCase, HttpCase, tagged, Form
 
 import json
@@ -62,7 +62,7 @@ class AccountTestInvoicingCommon(TransactionCase):
         cls.company_data = cls.setup_company_data('company_1_data', chart_template=chart_template)
 
         user.write({
-            'company_ids': [(6, 0, (cls.company_data['company'] + cls.company_data_2['company']).ids)],
+            'company_ids': [Command.set((cls.company_data['company'] + cls.company_data_2['company']).ids)],
             'company_id': cls.company_data['company'].id,
         })
 
@@ -79,22 +79,24 @@ class AccountTestInvoicingCommon(TransactionCase):
         cls.product_a = cls.env['product.product'].create({
             'name': 'product_a',
             'uom_id': cls.env.ref('uom.product_uom_unit').id,
+            'uom_po_id': cls.env.ref('uom.product_uom_unit').id,
             'lst_price': 1000.0,
             'standard_price': 800.0,
             'property_account_income_id': cls.company_data['default_account_revenue'].id,
             'property_account_expense_id': cls.company_data['default_account_expense'].id,
-            'taxes_id': [(6, 0, cls.tax_sale_a.ids)],
-            'supplier_taxes_id': [(6, 0, cls.tax_purchase_a.ids)],
+            'taxes_id': [Command.set(cls.tax_sale_a.ids)],
+            'supplier_taxes_id': [Command.set(cls.tax_purchase_a.ids)],
         })
         cls.product_b = cls.env['product.product'].create({
             'name': 'product_b',
             'uom_id': cls.env.ref('uom.product_uom_dozen').id,
+            'uom_po_id': cls.env.ref('uom.product_uom_dozen').id,
             'lst_price': 200.0,
             'standard_price': 160.0,
             'property_account_income_id': cls.copy_account(cls.company_data['default_account_revenue']).id,
             'property_account_expense_id': cls.copy_account(cls.company_data['default_account_expense']).id,
-            'taxes_id': [(6, 0, (cls.tax_sale_a + cls.tax_sale_b).ids)],
-            'supplier_taxes_id': [(6, 0, (cls.tax_purchase_a + cls.tax_purchase_b).ids)],
+            'taxes_id': [Command.set((cls.tax_sale_a + cls.tax_sale_b).ids)],
+            'supplier_taxes_id': [Command.set((cls.tax_purchase_a + cls.tax_purchase_b).ids)],
         })
 
         # ==== Fiscal positions ====
@@ -157,6 +159,12 @@ class AccountTestInvoicingCommon(TransactionCase):
             'property_account_payable_id': cls.company_data['default_account_payable'].copy().id,
             'company_id': False,
         })
+        cls.partner_agrolait = cls.env['res.partner'].create({
+            'name': 'Deco Agrolait',
+            'is_company': True,
+            'country_id': cls.env.ref('base.us').id,
+        })
+        cls.partner_agrolait_id = cls.partner_agrolait.id
 
         # ==== Cash rounding ====
         cls.cash_rounding_a = cls.env['account.cash.rounding'].create({
@@ -372,7 +380,9 @@ class AccountTestInvoicingCommon(TransactionCase):
         })
 
     @classmethod
-    def init_invoice(cls, move_type, partner=None, invoice_date=None, post=False, products=None, amounts=None, taxes=None, company=False):
+    def init_invoice(cls, move_type, partner=None, invoice_date=None, post=False, products=None, amounts=None, taxes=None, company=False, currency=None):
+        products = [] if products is None else products
+        amounts = [] if amounts is None else amounts
         move_form = Form(cls.env['account.move'] \
                     .with_company(company or cls.env.company) \
                     .with_context(default_move_type=move_type, account_predictive_bills_disable_prediction=True))
@@ -386,11 +396,13 @@ class AccountTestInvoicingCommon(TransactionCase):
         if not move_form._get_modifier('date', 'invisible'):
             move_form.date = move_form.invoice_date
         move_form.partner_id = partner or cls.partner_a
+        if currency:
+            move_form.currency_id = currency
 
         for product in (products or []):
             with move_form.invoice_line_ids.new() as line_form:
                 line_form.product_id = product
-                if taxes:
+                if taxes is not None:
                     line_form.tax_ids.clear()
                     for tax in taxes:
                         line_form.tax_ids.add(tax)
@@ -401,7 +413,7 @@ class AccountTestInvoicingCommon(TransactionCase):
                 # We use account_predictive_bills_disable_prediction context key so that
                 # this doesn't trigger prediction in case enterprise (hence account_predictive_bills) is installed
                 line_form.price_unit = amount
-                if taxes:
+                if taxes is not None:
                     line_form.tax_ids.clear()
                     for tax in taxes:
                         line_form.tax_ids.add(tax)
@@ -412,6 +424,96 @@ class AccountTestInvoicingCommon(TransactionCase):
             rslt.action_post()
 
         return rslt
+
+    def _create_invoice(self, move_type='out_invoice', invoice_amount=50, currency_id=None, partner_id=None, date_invoice=None, payment_term_id=False, auto_validate=False, taxes=None, state=None):
+        if move_type == 'entry':
+            raise AssertionError("Unexpected move_type : 'entry'.")
+
+        if not taxes:
+            taxes = self.env['account.tax']
+
+        date_invoice = date_invoice or time.strftime('%Y') + '-07-01'
+
+        invoice_vals = {
+            'move_type': move_type,
+            'partner_id': partner_id or self.partner_agrolait.id,
+            'invoice_date': date_invoice,
+            'date': date_invoice,
+            'invoice_line_ids': [Command.create({
+                'name': 'product that cost %s' % invoice_amount,
+                'quantity': 1,
+                'price_unit': invoice_amount,
+                'tax_ids': [Command.set(taxes.ids)],
+            })]
+        }
+
+        if payment_term_id:
+            invoice_vals['invoice_payment_term_id'] = payment_term_id
+
+        if currency_id:
+            invoice_vals['currency_id'] = currency_id
+
+        invoice = self.env['account.move'].with_context(default_move_type=move_type).create(invoice_vals)
+
+        if state == 'cancel':
+            invoice.write({'state': 'cancel'})
+        elif auto_validate or state == 'posted':
+            invoice.action_post()
+        return invoice
+
+    def create_invoice(self, move_type='out_invoice', invoice_amount=50, currency_id=None):
+        return self._create_invoice(move_type=move_type, invoice_amount=invoice_amount, currency_id=currency_id, auto_validate=True)
+
+    @classmethod
+    def _create_tax_tag(cls, name, country_id=None):
+        return cls.env['account.account.tag'].create({
+            'name': name,
+            'applicability': 'taxes',
+            'country_id': country_id or cls.company_data['company'].country_id.id,
+        })
+
+    @classmethod
+    def _create_tax(cls, name, amount, amount_type='percent', type_tax_use='sale', tag_names=None, children_taxes=None, tax_exigibility='on_invoice', **kwargs):
+        if not tag_names:
+            tag_names = {}
+        tag_commands = {
+            type_rep_line: [(Command.set(cls._create_tax_tag(tags).ids))]
+            for type_rep_line, tags in tag_names.items()
+        }
+        vals = {
+            'name': name,
+            'amount': amount,
+            'amount_type': amount_type,
+            'type_tax_use': type_tax_use,
+            'tax_exigibility': tax_exigibility,
+            'children_tax_ids': [Command.set(children_taxes.ids)] if children_taxes else None,
+            'invoice_repartition_line_ids': [
+                Command.create({
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'tag_ids': tag_commands.get('invoice_base'),
+                }),
+                Command.create({
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'tag_ids': tag_commands.get('invoice_tax'),
+                }),
+            ] if not children_taxes else None,
+            'refund_repartition_line_ids': [
+                Command.create({
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'tag_ids': tag_commands.get('refund_base'),
+                }),
+                Command.create({
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'tag_ids': tag_commands.get('refund_tax'),
+                }),
+            ] if not children_taxes else None,
+            **kwargs,
+        }
+        return cls.env['account.tax'].create(vals)
 
     def assertInvoiceValues(self, move, expected_lines_values, expected_move_values):
         def sort_lines(lines):
@@ -558,12 +660,6 @@ class TestAccountReconciliationCommon(AccountTestInvoicingCommon):
         cls.company = cls.company_data['company']
         cls.company.currency_id = cls.env.ref('base.EUR')
 
-        cls.partner_agrolait = cls.env['res.partner'].create({
-            'name': 'Deco Addict',
-            'is_company': True,
-            'country_id': cls.env.ref('base.us').id,
-        })
-        cls.partner_agrolait_id = cls.partner_agrolait.id
         cls.currency_swiss_id = cls.env.ref("base.CHF").id
         cls.currency_usd_id = cls.env.ref("base.USD").id
         cls.currency_euro_id = cls.env.ref("base.EUR").id
@@ -666,36 +762,6 @@ class TestAccountReconciliationCommon(AccountTestInvoicingCommon):
                 'rate': 1.5289,
             }
         ])
-
-    def _create_invoice(self, move_type='out_invoice', invoice_amount=50, currency_id=None, partner_id=None, date_invoice=None, payment_term_id=False, auto_validate=False):
-        date_invoice = date_invoice or time.strftime('%Y') + '-07-01'
-
-        invoice_vals = {
-            'move_type': move_type,
-            'partner_id': partner_id or self.partner_agrolait_id,
-            'invoice_date': date_invoice,
-            'date': date_invoice,
-            'invoice_line_ids': [(0, 0, {
-                'name': 'product that cost %s' % invoice_amount,
-                'quantity': 1,
-                'price_unit': invoice_amount,
-                'tax_ids': [(6, 0, [])],
-            })]
-        }
-
-        if payment_term_id:
-            invoice_vals['invoice_payment_term_id'] = payment_term_id
-
-        if currency_id:
-            invoice_vals['currency_id'] = currency_id
-
-        invoice = self.env['account.move'].with_context(default_move_type=move_type).create(invoice_vals)
-        if auto_validate:
-            invoice.action_post()
-        return invoice
-
-    def create_invoice(self, move_type='out_invoice', invoice_amount=50, currency_id=None):
-        return self._create_invoice(move_type=move_type, invoice_amount=invoice_amount, currency_id=currency_id, auto_validate=True)
 
     def create_invoice_partner(self, move_type='out_invoice', invoice_amount=50, currency_id=None, partner_id=False, payment_term_id=False):
         return self._create_invoice(

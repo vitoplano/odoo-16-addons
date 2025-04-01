@@ -1,5 +1,6 @@
 /** @odoo-module **/
-
+import { browser } from "@web/core/browser/browser";
+const sessionStorage = browser.sessionStorage
 import concurrency from 'web.concurrency';
 import utils from 'web.utils';
 import weUtils from 'web_editor.utils';
@@ -312,10 +313,12 @@ class PaletteSelectionScreen extends Component {
                 this.state.changeLogo(data, attachment.id);
                 this.updatePalettes();
             } else {
-                this.notification.notify({
-                    title: file.name,
-                    message: attachment.error,
-                });
+                this.notification.add(
+                    attachment.error,
+                    {
+                        title: file.name,
+                    }
+                );
             }
         }
     }
@@ -406,12 +409,12 @@ class ApplyConfiguratorScreen extends Component {
             // Here the website service goToWebsite method is not used because
             // the web client needs to be reloaded after the new modules have
             // been installed.
-            window.location.replace(`/web#action=website.website_preview&website_id=${resp.website_id}&enable_editor=1&with_loader=1`);
+            window.location.replace(`/web#action=website.website_preview&website_id=${encodeURIComponent(resp.website_id)}&enable_editor=1&with_loader=1`);
         }
     }
 }
 
-class FeaturesSelectionScreen extends ApplyConfiguratorScreen {
+export class FeaturesSelectionScreen extends ApplyConfiguratorScreen {
     setup() {
         super.setup();
 
@@ -601,7 +604,7 @@ function useStore() {
     return useState(env.store);
 }
 
-class Configurator extends Component {
+export class Configurator extends Component {
     setup() {
         this.orm = useService('orm');
         this.action = useService('action');
@@ -646,7 +649,7 @@ class Configurator extends Component {
     }
 
     get pathname() {
-        return `/website/configurator${this.state.currentStep ? `/${this.state.currentStep}` : ''}`;
+        return `/website/configurator${this.state.currentStep ? `/${encodeURIComponent(this.state.currentStep)}` : ''}`;
     }
 
     get storageItemName() {
@@ -663,7 +666,7 @@ class Configurator extends Component {
     }
 
     clearStorage() {
-        window.sessionStorage.removeItem(this.storageItemName);
+        sessionStorage.removeItem(this.storageItemName);
     }
 
     async getInitialState() {
@@ -696,7 +699,7 @@ class Configurator extends Component {
             palettes[paletteName] = palette;
         });
 
-        const localState = JSON.parse(window.sessionStorage.getItem(this.storageItemName));
+        const localState = JSON.parse(sessionStorage.getItem(this.storageItemName));
         if (localState) {
             let themes = [];
             if (localState.selectedIndustry && localState.selectedPalette) {
@@ -753,7 +756,7 @@ class Configurator extends Component {
             selectedType: state.selectedType,
             recommendedPalette: state.recommendedPalette,
         });
-        window.sessionStorage.setItem(this.storageItemName, newState);
+        sessionStorage.setItem(this.storageItemName, newState);
     }
 
     async skipConfigurator() {

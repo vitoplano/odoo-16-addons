@@ -27,12 +27,13 @@ class SaleOrder(models.Model):
     warehouse_id = fields.Many2one(
         'stock.warehouse', string='Warehouse', required=True,
         compute='_compute_warehouse_id', store=True, readonly=False, precompute=True,
-        states={'sale': [('readonly', True)], 'done': [('readonly', False)], 'cancel': [('readonly', False)]},
+        states={'sale': [('readonly', True)], 'done': [('readonly', True)], 'cancel': [('readonly', False)]},
         check_company=True)
     picking_ids = fields.One2many('stock.picking', 'sale_id', string='Transfers')
     delivery_count = fields.Integer(string='Delivery Orders', compute='_compute_picking_ids')
     delivery_status = fields.Selection([
         ('pending', 'Not Delivered'),
+        ('started', 'Started'),
         ('partial', 'Partially Delivered'),
         ('full', 'Fully Delivered'),
     ], string='Delivery Status', compute='_compute_delivery_status', store=True)
@@ -79,22 +80,22 @@ class SaleOrder(models.Model):
                 order.delivery_status = False
             elif all(p.state in ['done', 'cancel'] for p in order.picking_ids):
                 order.delivery_status = 'full'
-            elif any(p.state == 'done' for p in order.picking_ids):
+            elif any(p.state == 'done' for p in order.picking_ids) and any(
+                    l.qty_delivered for l in order.order_line):
                 order.delivery_status = 'partial'
+            elif any(p.state == 'done' for p in order.picking_ids):
+                order.delivery_status = 'started'
             else:
                 order.delivery_status = 'pending'
 
     @api.depends('picking_policy')
     def _compute_expected_date(self):
         super(SaleOrder, self)._compute_expected_date()
-        for order in self:
-            dates_list = []
-            for line in order.order_line.filtered(lambda x: x.state != 'cancel' and not x._is_delivery() and not x.display_type):
-                dt = line._expected_date()
-                dates_list.append(dt)
-            if dates_list:
-                expected_date = min(dates_list) if order.picking_policy == 'direct' else max(dates_list)
-                order.expected_date = fields.Datetime.to_string(expected_date)
+
+    def _select_expected_date(self, expected_dates):
+        if self.picking_policy == "direct":
+            return super()._select_expected_date(expected_dates)
+        return max(expected_dates)
 
     def write(self, values):
         if values.get('order_line') and self.state == 'sale':
@@ -162,15 +163,12 @@ class SaleOrder(models.Model):
         for order in self:
             default_warehouse_id = self.env['ir.default'].with_company(
                 order.company_id.id).get_model_defaults('sale.order').get('warehouse_id')
-            if order.company_id and order.company_id != order._origin.company_id:
-                warehouse = default_warehouse_id
-            else:
-                warehouse = self.env['stock.warehouse']
-            if order.state in ['draft', 'sent']:
-                order.warehouse_id = warehouse or order.user_id.with_company(order.company_id.id)._get_default_warehouse_id()
-            # In case we create a record in another state (eg: demo data, or business code)
-            if not order.warehouse_id:
-                order.warehouse_id = self.env.user._get_default_warehouse_id()
+            if order.state in ['draft', 'sent'] or not order.ids:
+                # Should expect empty
+                if default_warehouse_id is not None:
+                    order.warehouse_id = default_warehouse_id
+                else:
+                    order.warehouse_id = order.user_id.with_company(order.company_id.id)._get_default_warehouse_id()
 
     @api.onchange('partner_shipping_id')
     def _onchange_partner_shipping_id(self):

@@ -1,17 +1,21 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * auth_password_policy
+# 	* auth_password_policy
 # 
 # Translators:
-# Martin Trigaux, 2018
+# Hamed Mohammadi <hamed@dehongi.com>, 2023
+# Hamid Darabi, 2023
+# Martin Trigaux, 2023
+# Mostafa Barmshory <mostafa.barmshory@gmail.com>, 2024
+# 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 12.0\n"
+"Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-08 06:48+0000\n"
-"PO-Revision-Date: 2018-10-08 06:48+0000\n"
-"Last-Translator: Martin Trigaux, 2018\n"
-"Language-Team: Persian (https://www.transifex.com/odoo/teams/41243/fa/)\n"
+"POT-Creation-Date: 2024-02-06 13:31+0000\n"
+"PO-Revision-Date: 2022-09-22 05:45+0000\n"
+"Last-Translator: Mostafa Barmshory <mostafa.barmshory@gmail.com>, 2024\n"
+"Language-Team: Persian (https://app.transifex.com/odoo/teams/41243/fa/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -21,64 +25,74 @@ msgstr ""
 #. module: auth_password_policy
 #: model:ir.model,name:auth_password_policy.model_res_config_settings
 msgid "Config Settings"
-msgstr ""
+msgstr "تنظیمات پیکربندی"
 
 #. module: auth_password_policy
 #: model:ir.model.fields,field_description:auth_password_policy.field_res_config_settings__minlength
 msgid "Minimum Password Length"
-msgstr ""
+msgstr "حداقل طول پسوورد"
 
 #. module: auth_password_policy
 #: model:ir.model.fields,help:auth_password_policy.field_res_config_settings__minlength
 msgid ""
 "Minimum number of characters passwords must contain, set to 0 to disable."
-msgstr ""
+msgstr "حداقل تعداد حروف رمز عبور، برای غیرفعال کردن آن را روی 0 قرار دهید."
 
 #. module: auth_password_policy
-#: code:addons/auth_password_policy/models/res_users.py:30
+#. odoo-javascript
+#: code:addons/auth_password_policy/static/src/password_field.js:0
+#, python-format
+msgid "Password"
+msgstr "گذرواژه"
+
+#. module: auth_password_policy
+#. odoo-python
+#: code:addons/auth_password_policy/models/res_users.py:0
 #, python-format
 msgid "Passwords must have at least %d characters, got %d."
-msgstr ""
+msgstr "رمز عبورها باید حداقل %d حروف داشته باشند، %d."
 
 #. module: auth_password_policy
-#. openerp-web
-#: code:addons/auth_password_policy/static/src/js/password_gauge.js:123
+#. odoo-javascript
+#: code:addons/auth_password_policy/static/src/password_meter.js:0
 #, python-format
 msgid ""
-"Required: %s.\n"
+"Required: %s\n"
 "\n"
-"Hint: increase length, use multiple words and use non-letter characters to increase your password's strength."
+"Hint: to increase password strength, increase length, use multiple words, and use non-letter characters."
 msgstr ""
+"الزامی: %s\n"
+"نکته: افزایش قدرت رمز عبور، افزایش طول رمز عبور، استفاده از چند کلمه و عدم استفاده از حروف."
 
 #. module: auth_password_policy
 #: model:ir.model,name:auth_password_policy.model_res_users
-msgid "Users"
-msgstr "کاربران"
+msgid "User"
+msgstr "کاربر"
 
 #. module: auth_password_policy
-#. openerp-web
-#: code:addons/auth_password_policy/static/src/js/password_gauge.js:28
+#. odoo-javascript
+#: code:addons/auth_password_policy/static/src/password_policy.js:0
 #, python-format
-msgid "at least %d character classes"
-msgstr ""
+msgid "at least %s character classes"
+msgstr "حداقل %s حرفح"
 
 #. module: auth_password_policy
-#. openerp-web
-#: code:addons/auth_password_policy/static/src/js/password_gauge.js:22
+#. odoo-javascript
+#: code:addons/auth_password_policy/static/src/password_policy.js:0
 #, python-format
-msgid "at least %d characters"
-msgstr ""
+msgid "at least %s characters"
+msgstr "حداقل %s حرف"
 
 #. module: auth_password_policy
-#. openerp-web
-#: code:addons/auth_password_policy/static/src/js/password_gauge.js:25
+#. odoo-javascript
+#: code:addons/auth_password_policy/static/src/password_policy.js:0
 #, python-format
-msgid "at least %d words"
-msgstr ""
+msgid "at least %s words"
+msgstr "حداقل %s حرف"
 
 #. module: auth_password_policy
-#. openerp-web
-#: code:addons/auth_password_policy/static/src/js/password_gauge.js:125
+#. odoo-javascript
+#: code:addons/auth_password_policy/static/src/password_meter.js:0
 #, python-format
 msgid "no requirements"
 msgstr ""

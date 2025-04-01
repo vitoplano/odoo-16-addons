@@ -4,18 +4,18 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
-# Fernanda Marques <fem@odoo.com>, 2022
 # Tivisse <yti@odoo.com>, 2022
 # Cécile Collart <cco@odoo.com>, 2022
+# Jolien De Paepe, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta\n"
+"Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-23 08:02+0000\n"
+"POT-Creation-Date: 2024-02-06 13:31+0000\n"
 "PO-Revision-Date: 2022-09-22 05:52+0000\n"
-"Last-Translator: Cécile Collart <cco@odoo.com>, 2022\n"
-"Language-Team: French (https://www.transifex.com/odoo/teams/41243/fr/)\n"
+"Last-Translator: Jolien De Paepe, 2023\n"
+"Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -23,7 +23,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. module: hr_skills
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_skills/static/src/fields/skills_one2many.xml:0
 #: code:addons/hr_skills/static/src/xml/resume_templates.xml:0
 #, python-format
@@ -31,11 +31,11 @@ msgid "ADD"
 msgstr "AJOUTER"
 
 #. module: hr_skills
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_skills/static/src/xml/resume_templates.xml:0
 #, python-format
 msgid "CREATE A NEW ENTRY"
-msgstr "CREER UNE NOUVELLE ENTREE"
+msgstr "CRÉER UNE NOUVELLE ENTRÉE"
 
 #. module: hr_skills
 #: model:ir.model.fields.selection,name:hr_skills.selection__hr_resume_line__display_type__classic
@@ -48,11 +48,11 @@ msgid "Company"
 msgstr "Société"
 
 #. module: hr_skills
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_skills/static/src/fields/skills_one2many.xml:0
 #, python-format
 msgid "Create a new entry"
-msgstr "Créez une nouvelle entrée"
+msgstr "Créer une nouvelle entrée"
 
 #. module: hr_skills
 #: model:ir.model.fields,field_description:hr_skills.field_hr_employee_skill__create_uid
@@ -77,7 +77,7 @@ msgid "Created on"
 msgstr "Créé le"
 
 #. module: hr_skills
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_skills/static/src/fields/resume_one2many.xml:0
 #, python-format
 msgid "Current"
@@ -126,7 +126,7 @@ msgstr "Description"
 #: model:ir.model.fields,field_description:hr_skills.field_hr_skill_level__display_name
 #: model:ir.model.fields,field_description:hr_skills.field_hr_skill_type__display_name
 msgid "Display Name"
-msgstr "Afficher Nom"
+msgstr "Nom d'affichage"
 
 #. module: hr_skills
 #: model:ir.model.fields,field_description:hr_skills.field_hr_resume_line__display_type
@@ -197,8 +197,8 @@ msgid ""
 "If checked, this level will be the default one selected when choosing this "
 "skill."
 msgstr ""
-"Si coché, ce niveau sera celui sélectionné par défaut lors du choix de cette"
-" compétence."
+"Si coché, ce niveau sera sélectionné par défaut lors du choix de cette "
+"compétence."
 
 #. module: hr_skills
 #: model:ir.model.fields,field_description:hr_skills.field_hr_employee_skill____last_update
@@ -259,13 +259,14 @@ msgid "Name"
 msgstr "Nom"
 
 #. module: hr_skills
+#. odoo-python
 #: code:addons/hr_skills/models/hr_skill_level.py:0
 #, python-format
 msgid "Only one default level is allowed per skill type."
 msgstr "Un seul niveau par défaut est autorisé par type de compétence."
 
 #. module: hr_skills
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_skills/static/src/views/skills_list_renderer.js:0
 #, python-format
 msgid "Other"
@@ -299,12 +300,7 @@ msgstr "La progression doit être un nombre compris entre 0 et 100."
 #. module: hr_skills
 #: model:ir.model,name:hr_skills.model_hr_employee_public
 msgid "Public Employee"
-msgstr "Employé public"
-
-#. module: hr_skills
-#: model_terms:ir.ui.view,arch_db:hr_skills.hr_employee_view_form
-msgid "Resume"
-msgstr "Reprendre"
+msgstr "Fonctionnaire"
 
 #. module: hr_skills
 #: model:ir.ui.menu,name:hr_skills.menu_human_resources_configuration_resume
@@ -314,24 +310,24 @@ msgstr "Reprendre"
 #: model_terms:ir.ui.view,arch_db:hr_skills.hr_employee_view_search
 #: model_terms:ir.ui.view,arch_db:hr_skills.res_users_view_form
 #: model_terms:ir.ui.view,arch_db:hr_skills.resume_line_view_form
-msgid "Resumé"
-msgstr "CV"
+msgid "Resume"
+msgstr "Curriculum vitae"
 
 #. module: hr_skills
 #: model:ir.actions.act_window,name:hr_skills.hr_resume_type_action
-msgid "Resumé Line Types"
-msgstr "Types de Ligne de Résumé"
+msgid "Resume Line Types"
+msgstr "Types de ligne de CV"
 
 #. module: hr_skills
 #: model:ir.model,name:hr_skills.model_hr_resume_line
-msgid "Resumé line of an employee"
-msgstr "Ligne du CV d'un employé"
+msgid "Resume line of an employee"
+msgstr "Ligne de CV d'un employé"
 
 #. module: hr_skills
 #: model:ir.model.fields,field_description:hr_skills.field_hr_employee__resume_line_ids
 #: model:ir.model.fields,field_description:hr_skills.field_hr_employee_public__resume_line_ids
 #: model:ir.model.fields,field_description:hr_skills.field_res_users__resume_line_ids
-msgid "Resumé lines"
+msgid "Resume lines"
 msgstr "Lignes de CV"
 
 #. module: hr_skills
@@ -342,7 +338,7 @@ msgstr "Rechercher dans les journaux"
 #. module: hr_skills
 #: model_terms:ir.ui.view,arch_db:hr_skills.hr_skill_view_search
 msgid "Search Skill"
-msgstr "Rechercher la compétence"
+msgstr "Rechercher une compétence"
 
 #. module: hr_skills
 #: model:ir.model.fields,field_description:hr_skills.field_hr_resume_line_type__sequence
@@ -382,13 +378,13 @@ msgstr "Rapport sur l'historique des compétences"
 #: model:ir.model.fields,field_description:hr_skills.field_hr_employee_skill_report__skill_level
 #: model_terms:ir.ui.view,arch_db:hr_skills.employee_skill_level_view_form
 msgid "Skill Level"
-msgstr "Niveau de Compétence"
+msgstr "Niveau de compétence"
 
 #. module: hr_skills
 #: model_terms:ir.ui.view,arch_db:hr_skills.employee_skill_level_view_tree
 #: model_terms:ir.ui.view,arch_db:hr_skills.employee_skill_view_tree
 msgid "Skill Levels"
-msgstr "Niveaux de Compétence"
+msgstr "Niveaux de compétence"
 
 #. module: hr_skills
 #: model:ir.model,name:hr_skills.model_hr_skill_type
@@ -402,14 +398,14 @@ msgstr "Niveaux de Compétence"
 #: model_terms:ir.ui.view,arch_db:hr_skills.hr_employee_skill_type_view_form
 #: model_terms:ir.ui.view,arch_db:hr_skills.hr_skill_view_search
 msgid "Skill Type"
-msgstr "Type de Compétence"
+msgstr "Type de compétence"
 
 #. module: hr_skills
 #: model:ir.actions.act_window,name:hr_skills.hr_skill_type_action
 #: model:ir.ui.menu,name:hr_skills.hr_skill_type_menu
 #: model_terms:ir.ui.view,arch_db:hr_skills.hr_skill_type_view_tree
 msgid "Skill Types"
-msgstr "Types de Compétence"
+msgstr "Types de compétence"
 
 #. module: hr_skills
 #: model:ir.model,name:hr_skills.model_hr_employee_skill
@@ -442,6 +438,7 @@ msgid "Skills History"
 msgstr "Historique des compétences"
 
 #. module: hr_skills
+#. odoo-python
 #: code:addons/hr_skills/models/hr_employee_skill.py:0
 #, python-format
 msgid "The skill %(name)s and skill type %(type)s doesn't match"
@@ -450,12 +447,13 @@ msgstr ""
 "pas"
 
 #. module: hr_skills
+#. odoo-python
 #: code:addons/hr_skills/models/hr_employee_skill.py:0
 #, python-format
 msgid "The skill level %(level)s is not valid for skill type: %(type)s"
 msgstr ""
 "Le niveau de compétence %(level)s n'est pas valide pour le type de "
-"compétence: %(type)s"
+"compétence : %(type)s"
 
 #. module: hr_skills
 #: model:ir.model.constraint,message:hr_skills.constraint_hr_resume_line_date_check
@@ -470,7 +468,7 @@ msgstr "Titre"
 #. module: hr_skills
 #: model:ir.model.constraint,message:hr_skills.constraint_hr_employee_skill__unique_skill
 msgid "Two levels for the same skill is not allowed"
-msgstr "Deux niveaux pour la même compétence n'est pas autorisé"
+msgstr "Deux niveaux pour la même compétence ne sont pas autorisés"
 
 #. module: hr_skills
 #: model:ir.model.constraint,message:hr_skills.constraint_hr_employee_skill_log__unique_skill_log
@@ -485,7 +483,7 @@ msgstr "Type"
 
 #. module: hr_skills
 #: model:ir.model,name:hr_skills.model_hr_resume_line_type
-msgid "Type of a resumé line"
+msgid "Type of a resume line"
 msgstr "Type d'une ligne de CV"
 
 #. module: hr_skills
@@ -496,9 +494,9 @@ msgstr "Utilisateur"
 #. module: hr_skills
 #: model_terms:ir.ui.view,arch_db:hr_skills.hr_employee_skill_type_view_form
 msgid "e.g. Languages"
-msgstr "par exemple : Langues"
+msgstr "par ex. Langues"
 
 #. module: hr_skills
 #: model_terms:ir.ui.view,arch_db:hr_skills.resume_line_view_form
 msgid "e.g. Odoo Inc."
-msgstr "par exemple : Odoo Inc."
+msgstr "par ex. Odoo Inc."

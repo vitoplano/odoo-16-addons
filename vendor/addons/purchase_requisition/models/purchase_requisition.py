@@ -4,6 +4,7 @@ from datetime import datetime, time
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from collections import defaultdict
 
 
 PURCHASE_REQUISITION_STATES = [
@@ -107,7 +108,7 @@ class PurchaseRequisition(models.Model):
         # try to set all associated quotations to cancel state
         for requisition in self:
             for requisition_line in requisition.line_ids:
-                requisition_line.supplier_info_ids.unlink()
+                requisition_line.supplier_info_ids.sudo().unlink()
             requisition.purchase_ids.button_cancel()
             for po in requisition.purchase_ids:
                 po.message_post(body=_('Cancelled by the agreement associated to this quotation.'))
@@ -129,7 +130,7 @@ class PurchaseRequisition(models.Model):
             self.write({'state': 'in_progress'})
         # Set the sequence number regarding the requisition type
         if self.name == 'New':
-            self.name = self.env['ir.sequence'].next_by_code('purchase.requisition.blanket.order')
+            self.name = self.env['ir.sequence'].with_company(self.company_id).next_by_code('purchase.requisition.blanket.order')
 
     def action_open(self):
         self.write({'state': 'open'})
@@ -147,13 +148,13 @@ class PurchaseRequisition(models.Model):
             raise UserError(_('You have to cancel or validate every RfQ before closing the purchase requisition.'))
         for requisition in self:
             for requisition_line in requisition.line_ids:
-                requisition_line.supplier_info_ids.unlink()
+                requisition_line.supplier_info_ids.sudo().unlink()
         self.write({'state': 'done'})
 
     @api.ondelete(at_uninstall=False)
     def _unlink_if_draft_or_cancel(self):
         if any(requisition.state not in ('draft', 'cancel') for requisition in self):
-            raise UserError(_('You can only delete draft requisitions.'))
+            raise UserError(_('You can only delete draft or cancelled requisitions.'))
 
     def unlink(self):
         # Draft requisitions could have some requisition lines.
@@ -221,7 +222,7 @@ class PurchaseRequisitionLine(models.Model):
         purchase_requisition = self.requisition_id
         if purchase_requisition.type_id.quantity_copy == 'none' and purchase_requisition.vendor_id:
             # create a supplier_info only in case of blanket order
-            self.env['product.supplierinfo'].create({
+            self.env['product.supplierinfo'].sudo().create({
                 'partner_id': purchase_requisition.vendor_id.id,
                 'product_id': self.product_id.id,
                 'product_tmpl_id': self.product_id.product_tmpl_id.id,
@@ -232,7 +233,7 @@ class PurchaseRequisitionLine(models.Model):
 
     @api.depends('requisition_id.purchase_ids.state')
     def _compute_ordered_qty(self):
-        line_found = set()
+        line_found = defaultdict(set)
         for line in self:
             total = 0.0
             for po in line.requisition_id.purchase_ids.filtered(lambda purchase_order: purchase_order.state in ['purchase', 'done']):
@@ -241,9 +242,9 @@ class PurchaseRequisitionLine(models.Model):
                         total += po_line.product_uom._compute_quantity(po_line.product_qty, line.product_uom_id)
                     else:
                         total += po_line.product_qty
-            if line.product_id not in line_found:
+            if line.product_id not in line_found[line.requisition_id]:
                 line.qty_ordered = total
-                line_found.add(line.product_id)
+                line_found[line.requisition_id].add(line.product_id)
             else:
                 line.qty_ordered = 0
 

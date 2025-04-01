@@ -3,7 +3,41 @@
     <template id="report_expense_sheet">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
+                <!-- Setup company info -->
+                <t t-set="company" t-value="o.company_id"/>
+                <t t-set="company_data" t-value="{
+                    'name': company.name,
+                    'street': company.street,
+                    'city': company.city,
+                    'zip': company.zip,
+                    'country': company.country_id.name,
+                    'phone': company.phone,
+                    'email': company.email,
+                    'website': company.website,
+                    'vat': company.vat
+                }"/>
+                
                 <t t-call="web.external_layout">
+                    <div class="header">
+                        <div class="row">
+                            <div class="col-6">
+                                <!-- Company logo is handled by external_layout -->
+                            </div>
+                            <div class="col-6 text-end">
+                                <div t-if="company_data.get('name')" t-esc="company_data['name']"/>
+                                <div t-if="company_data.get('street')" t-esc="company_data['street']"/>
+                                <div>
+                                    <span t-if="company_data.get('zip')" t-esc="company_data['zip']"/>
+                                    <span t-if="company_data.get('city')" t-esc="company_data['city']"/>
+                                </div>
+                                <div t-if="company_data.get('country')" t-esc="company_data['country']"/>
+                                <div t-if="company_data.get('vat')" class="mt-2">
+                                    VAT: <span t-esc="company_data['vat']"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="page">
                         <h2>Expenses Report</h2>
 
@@ -11,10 +45,6 @@
                             <div class="col-2">
                                 <strong>Employee:</strong>
                                 <p t-field="o.employee_id.name"/>
-                            </div>
-                            <div class="col-2">
-                                <strong>Date:</strong>
-                                <p t-field="o.accounting_date"/>
                             </div>
                             <div class="col-3">
                                 <strong>Description:</strong>
@@ -33,52 +63,39 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Name</th>
-                                    <th class="text-center">Ref.</th>
-                                    <th>Unit Price</th>
-                                    <th>Taxes</th>
-                                    <th class="text-center">Qty</th>
-                                    <th class="text-end">Price</th>
-                                    <th t-if="o.is_multiple_currency" class="text-end">Price in Company Currency</th>
+                                    <th class="col-2">Date</th>
+                                    <th class="col-4">Description</th>
+                                    <th class="col-2">Project</th>
+                                    <th class="col-1 text-end">Unit Price</th>
+                                    <th class="col-1 text-center">Qty</th>
+                                    <th class="col-1 text-end">Price</th>
+                                    <th t-if="o.is_multiple_currency" class="col-1 text-end">Price in Company Currency</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr t-foreach="o.expense_line_ids" t-as="line">
-                                    <td><span t-field="line.date"/></td>
-                                    <td>
+                                    <td class="col-2"><span t-field="line.date"/></td>
+                                    <td class="col-4">
                                         <span t-field="line.name"/>
-                                        <span t-field="line.description"/><br/>
-                                        <span>
-                                            <div t-foreach="line.analytic_distribution" t-as="distribution">
-                                                <t t-esc="line.env['account.analytic.account'].browse(int(distribution))[0].name"/>: <t t-esc="line.analytic_distribution.get(distribution)"/>
-                                            </div>
-                                        </span>
+                                        <span t-if="line.description" t-field="line.description"/>
                                     </td>
-                                    <td style="text-center">
-                                        <span t-field="line.reference"/>
-                                    </td>
-                                    <td>
-                                        <span t-field="line.unit_amount"/>
-                                    </td>
-                                    <td>
-                                        <t t-foreach="line.tax_ids" t-as="tax">
-                                          <t t-if="tax.description">
-                                            <span t-field="tax.description"/>
-                                          </t>
-                                          <t t-if="not tax.description">
-                                            <span t-field="tax.name"/>
-                                          </t>
+                                    <td class="col-2">
+                                        <t t-foreach="line.analytic_distribution" t-as="distribution">
+                                            <span t-esc="line.env['account.analytic.account'].browse(int(distribution))[0].name"/>
+                                            (<t t-esc="line.analytic_distribution.get(distribution)"/>%)
                                         </t>
                                     </td>
-                                    <td class="text-center">
+                                    <td class="col-1 text-end">
+                                        <span t-field="line.unit_amount"/>
+                                    </td>
+                                    <td class="col-1 text-center">
                                         <span t-field="line.quantity"/>
                                     </td>
-                                    <td class="text-end">
+                                    <td class="col-1 text-end">
                                         <span t-field="line.total_amount"
                                             t-options='{"widget": "monetary", "display_currency": line.currency_id}'/>
                                     </td>
-                                    <td t-if="o.is_multiple_currency" class="text-end">
+                                    <td t-if="o.is_multiple_currency" class="col-1 text-end">
                                         <span t-field="line.total_amount_company"/>
                                     </td>
                                 </tr>
@@ -100,20 +117,35 @@
                         </div>
                         <p>Certified honest and conform,<br/>(Date and signature).<br/><br/></p>
                     </div>
+
+                    <!-- Footer with Contact Info -->
+                    <div class="footer">
+                        <div class="text-center" style="border-top: 1px solid #dee2e6; padding-top: 10px;">
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <span t-if="company_data.get('phone')">Tel: <t t-esc="company_data['phone']"/></span>
+                                    <span t-if="company_data.get('email')" style="margin: 0 15px;">Email: <t t-esc="company_data['email']"/></span>
+                                    <span t-if="company_data.get('website')">Web: <t t-esc="company_data['website']"/></span>
+                                </div>
+                            </div>
+                            <div class="text-center text-muted mt-2">
+                                Page <span class="page"/> of <span class="topage"/>
+                            </div>
+                        </div>
+                    </div>
                 </t>
             </t>
         </t>
     </template>
 
-    <record id="action_report_hr_expense_sheet" model="ir.actions.report">
-        <field name="name">Expenses Report</field>
-        <field name="model">hr.expense.sheet</field>
-        <field name="report_type">qweb-pdf</field>
-        <field name="report_name">hr_expense.report_expense_sheet</field>
-        <field name="report_file">hr_expense.report_expense_sheet</field>
-        <field name="print_report_name">'Expenses - %s - %s' % (object.employee_id.name, (object.name).replace('/', ''))</field>
-        <field name="binding_model_id" ref="model_hr_expense_sheet"/>
-        <field name="binding_type">report</field>
-    </record>
-
+<record id="action_report_hr_expense_sheet" model="ir.actions.report">
+    <field name="name">Expenses Report</field>
+    <field name="model">hr.expense.sheet</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">hr_expense.report_expense_sheet</field>
+    <field name="report_file">hr_expense.report_expense_sheet</field>
+    <field name="print_report_name">'Expense Report - %s - %s' % (object.employee_id.name, str(object.id))</field>
+    <field name="binding_model_id" ref="model_hr_expense_sheet"/>
+    <field name="binding_type">report</field>
+</record>
 </odoo>

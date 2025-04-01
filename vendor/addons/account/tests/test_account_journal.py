@@ -98,7 +98,7 @@ class TestAccountJournal(AccountTestInvoicingCommon):
             return res
 
         with patch.object(AccountPaymentMethod, '_get_payment_method_information', _get_payment_method_information):
-            self.env['account.payment.method'].create({
+            self.env['account.payment.method'].sudo().create({
                 'name': 'Multi method',
                 'code': 'multi',
                 'payment_type': 'inbound'
@@ -157,3 +157,51 @@ class TestAccountJournal(AccountTestInvoicingCommon):
         journal_2.code = 'ぁ'
         journal_2.alias_name = False
         self.assertEqual(journal_2.alias_name, 'sale-' + company_2_id)
+
+    def test_account_journal_duplicates(self):
+        new_journals = self.env["account.journal"].with_context(import_file=True).create([
+            {"name": "OD_BLABLA"},
+            {"name": "OD_BLABLU"},
+        ])
+
+        self.assertEqual(sorted(new_journals.mapped("code")), ["GEN1", "OD_BL"], "The journals should be set correctly")
+
+    def test_archive_used_journal(self):
+        journal = self.env['account.journal'].create({
+            'name': 'Test Journal',
+            'type': 'sale',
+            'code': 'A',
+        })
+        check_method = self.env['account.payment.method'].sudo().create({
+                'name': 'Test',
+                'code': 'check_printing_expense_test',
+                'payment_type': 'outbound',
+        })
+        self.env['account.payment.method.line'].create({
+            'name': 'Check',
+            'payment_method_id': check_method.id,
+            'journal_id': journal.id
+            })
+        with self.assertRaises(ValidationError):
+            journal.action_archive()
+
+    def test_archive_multiple_journals(self):
+        journals = self.env['account.journal'].create([{
+                'name': 'Test Journal 1',
+                'type': 'sale',
+                'code': 'A1'
+            }, {
+                'name': 'Test Journal 2',
+                'type': 'sale',
+                'code': 'A2'
+            }])
+
+        # Archive the Journals
+        journals.action_archive()
+        self.assertFalse(journals[0].active)
+        self.assertFalse(journals[1].active)
+
+        # Unarchive the Journals
+        journals.action_unarchive()
+        self.assertTrue(journals[0].active)
+        self.assertTrue(journals[1].active)

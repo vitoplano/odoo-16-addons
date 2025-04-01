@@ -93,20 +93,27 @@ QUnit.module("spreadsheet_account > Accounting", { beforeEach }, () => {
             mockRPC: async function (route, args) {
                 if (args.method === "spreadsheet_fetch_debit_credit") {
                     assert.step("spreadsheet_fetch_debit_credit");
-                    return [
-                        { debit: 42, credit: 16 },
-                        { debit: 100, credit: 10 },
-                    ];
+                    return [{ debit: 142, credit: 26 }];
                 }
             },
         });
         setCellContent(model, "A1", `=ODOO.CREDIT("100,200", "2022")`);
         setCellContent(model, "A2", `=ODOO.DEBIT("100,200", "2022")`);
         setCellContent(model, "A3", `=ODOO.BALANCE("100,200", "2022")`);
+
+        // with spaces
+        setCellContent(model, "B1", `=ODOO.CREDIT("100 , 200", "2022")`);
+        setCellContent(model, "B2", `=ODOO.DEBIT("100 , 200", "2022")`);
+        setCellContent(model, "B3", `=ODOO.BALANCE("100 , 200", "2022")`);
+
         await waitForDataSourcesLoaded(model);
         assert.equal(getCellValue(model, "A1"), 26);
         assert.equal(getCellValue(model, "A2"), 142);
         assert.equal(getCellValue(model, "A3"), 116);
+
+        assert.equal(getCellValue(model, "B1"), 26);
+        assert.equal(getCellValue(model, "B2"), 142);
+        assert.equal(getCellValue(model, "B3"), 116);
         assert.verifySteps(["spreadsheet_fetch_debit_credit"]);
     });
 
@@ -134,7 +141,6 @@ QUnit.module("spreadsheet_account > Accounting", { beforeEach }, () => {
                         assert.step(JSON.stringify(blob));
                     }
                 }
-                return [];
             },
         });
         setCellContent(model, "A1", `=ODOO.BALANCE("100", "2022")`);
@@ -146,61 +152,62 @@ QUnit.module("spreadsheet_account > Accounting", { beforeEach }, () => {
         setCellContent(model, "A7", `=ODOO.DEBIT("5", "05/04/2021", 1)`);
         setCellContent(model, "A8", `=ODOO.BALANCE("5", "2022",,,FALSE)`);
         setCellContent(model, "A9", `=ODOO.BALANCE("100", "05/05/2022",,,TRUE)`);
+        setCellContent(model, "A10", `=ODOO.BALANCE(33,2021,-2)`);
         await waitForDataSourcesLoaded(model);
 
         assert.verifySteps([
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("2022"),
-                    code: "100",
+                    codes: ["100"],
                     companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("01/2022"),
-                    code: "100",
+                    codes: ["100"],
                     companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("Q2/2022"),
-                    code: "100",
+                    codes: ["100"],
                     companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("2021"),
-                    code: "10",
+                    codes: ["10"],
                     companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("2021"),
-                    code: "5",
+                    codes: ["5"],
                     companyId: 2,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("05/04/2022"),
-                    code: "5",
+                    codes: ["5"],
                     companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("2022"),
-                    code: "5",
+                    codes: ["5"],
                     companyId: null,
                     includeUnposted: false,
                 })
@@ -208,9 +215,17 @@ QUnit.module("spreadsheet_account > Accounting", { beforeEach }, () => {
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("05/05/2022"),
-                    code: "100",
+                    codes: ["100"],
                     companyId: null,
                     includeUnposted: true,
+                })
+            ),
+            JSON.stringify(
+                camelToSnakeObject({
+                    dateRange: parseAccountingDate("2019"),
+                    codes: ["33"],
+                    companyId: null,
+                    includeUnposted: false,
                 })
             ),
         ]);
@@ -238,17 +253,9 @@ QUnit.module("spreadsheet_account > Accounting", { beforeEach }, () => {
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("2022"),
-                    code: "100",
+                    codes: ["100", "200"],
                     companyId: null,
-                    includeUnposted: true,
-                })
-            ),
-            JSON.stringify(
-                camelToSnakeObject({
-                    dateRange: parseAccountingDate("2022"),
-                    code: "200",
-                    companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
         ]);
@@ -279,17 +286,9 @@ QUnit.module("spreadsheet_account > Accounting", { beforeEach }, () => {
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("2022"),
-                    code: "100104",
+                    codes: ["100104", "200104"],
                     companyId: null,
-                    includeUnposted: true,
-                })
-            ),
-            JSON.stringify(
-                camelToSnakeObject({
-                    dateRange: parseAccountingDate("2022"),
-                    code: "200104",
-                    companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
         ]);
@@ -327,26 +326,18 @@ QUnit.module("spreadsheet_account > Accounting", { beforeEach }, () => {
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("2022"),
-                    code: "100",
+                    codes: ["100"],
                     companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
             "spreadsheet_fetch_debit_credit",
             JSON.stringify(
                 camelToSnakeObject({
                     dateRange: parseAccountingDate("2022"),
-                    code: "100104",
+                    codes: ["100104", "200104"],
                     companyId: null,
-                    includeUnposted: true,
-                })
-            ),
-            JSON.stringify(
-                camelToSnakeObject({
-                    dateRange: parseAccountingDate("2022"),
-                    code: "200104",
-                    companyId: null,
-                    includeUnposted: true,
+                    includeUnposted: false,
                 })
             ),
         ]);

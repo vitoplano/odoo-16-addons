@@ -6,6 +6,7 @@
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': "A Dutch payment provider covering Europe and the US.",
+    'description': " ",  # Non-empty string to avoid loading the README file.
     'depends': ['payment'],
     'data': [
         'views/payment_adyen_templates.xml',
@@ -20,7 +21,6 @@
     'assets': {
         'web.assets_frontend': [
             'payment_adyen/static/src/js/payment_form.js',
-            'payment_adyen/static/src/scss/dropin.scss',
         ],
     },
     'license': 'LGPL-3',

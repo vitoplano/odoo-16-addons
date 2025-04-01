@@ -6,6 +6,7 @@ odoo.define('point_of_sale.ReceiptScreen', function (require) {
     const { useErrorHandlers } = require('point_of_sale.custom_hooks');
     const Registries = require('point_of_sale.Registries');
     const AbstractReceiptScreen = require('point_of_sale.AbstractReceiptScreen');
+    const { useAsyncLockedMethod } = require('point_of_sale.custom_hooks');
 
     const { onMounted, useRef, status } = owl;
 
@@ -19,6 +20,7 @@ odoo.define('point_of_sale.ReceiptScreen', function (require) {
                 const partner = order.get_partner();
                 this.orderUiState = order.uiState.ReceiptScreen;
                 this.orderUiState.inputEmail = this.orderUiState.inputEmail || (partner && partner.email) || '';
+                this.orderUiState.isSendingEmail = false;
                 this.is_email = is_email;
 
                 onMounted(() => {
@@ -37,6 +39,7 @@ odoo.define('point_of_sale.ReceiptScreen', function (require) {
                         }
                     }, 0);
                 });
+                this.onSendEmail = useAsyncLockedMethod(this.onSendEmail);
             }
             _addNewOrder() {
                 this.env.pos.add_new_order();
@@ -47,13 +50,22 @@ odoo.define('point_of_sale.ReceiptScreen', function (require) {
                     this.orderUiState.emailNotice = this.env._t('Invalid email.');
                     return;
                 }
+                let isSuccess = false;
+                let notice = "";
                 try {
+                    this.orderUiState.isSendingEmail = true;
                     await this._sendReceiptToCustomer();
-                    this.orderUiState.emailSuccessful = true;
-                    this.orderUiState.emailNotice = this.env._t('Email sent.');
+                    isSuccess = true;
+                    notice = this.env._t("Email sent.");
                 } catch (_error) {
-                    this.orderUiState.emailSuccessful = false;
-                    this.orderUiState.emailNotice = this.env._t('Sending email failed. Please try again.');
+                    isSuccess = false;
+                    notice = this.env._t("Sending email failed. Please try again.");
+                } finally {
+                    // Wait for 1 second before reflecting the state change in the UI.
+                    await new Promise((res) => setTimeout(res, 1000));
+                    this.orderUiState.emailSuccessful = isSuccess;
+                    this.orderUiState.emailNotice = notice;
+                    this.orderUiState.isSendingEmail = false;
                 }
             }
             get orderAmountPlusTip() {
@@ -85,8 +97,9 @@ odoo.define('point_of_sale.ReceiptScreen', function (require) {
              */
             async handleAutoPrint() {
                 if (this._shouldAutoPrint()) {
+                    const currentOrder = this.currentOrder;
                     await this.printReceipt();
-                    if (this.currentOrder._printed && this._shouldCloseImmediately()) {
+                    if (this.currentOrder && this.currentOrder === currentOrder && currentOrder._printed && this._shouldCloseImmediately()) {
                         this.whenClosing();
                     }
                 }
@@ -101,9 +114,10 @@ odoo.define('point_of_sale.ReceiptScreen', function (require) {
                 }
             }
             async printReceipt() {
+                const currentOrder = this.currentOrder;
                 const isPrinted = await this._printReceipt();
                 if (isPrinted) {
-                    this.currentOrder._printed = true;
+                    currentOrder._printed = true;
                 }
             }
             _shouldAutoPrint() {
@@ -122,6 +136,13 @@ odoo.define('point_of_sale.ReceiptScreen', function (require) {
                 const orderName = order.get_name();
                 const orderPartner = { email: this.orderUiState.inputEmail, name: partner ? partner.name : this.orderUiState.inputEmail };
                 const order_server_id = this.env.pos.validated_orders_name_server_id_map[orderName];
+                if (!order_server_id) {
+                    this.showPopup('ErrorPopup', {
+                        title: this.env._t('Unsynced order'),
+                        body: this.env._t('This order is not yet synced to server. Make sure it is synced then try again.'),
+                    });
+                    return Promise.reject();
+                }
                 await this.rpc({
                     model: 'pos.order',
                     method: 'action_receipt_to_customer',

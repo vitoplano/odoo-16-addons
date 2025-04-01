@@ -28,7 +28,8 @@ tour.register("website_form_editor_tour_submit", {
                         ":has(.s_website_form_field.s_website_form_required:has(label:contains('State')):has(select[name='State'][required]:has(option[value='France'])))" +
                         ":has(.s_website_form_field:has(label:contains('State')):has(select[name='State'][required]:has(option[value='Canada'])))" +
                         ":has(.s_website_form_field:has(label:contains('Invoice Scan')))" +
-                        ":has(.s_website_form_field:has(input[name='email_to'][value='test@test.test']))",
+                        ":has(.s_website_form_field:has(input[name='email_to'][value='test@test.test']))" +
+                        ":has(.s_website_form_field:has(input[name='website_form_signature']))",
         trigger:  ".s_website_form_send"
     },
     {
@@ -42,7 +43,7 @@ tour.register("website_form_editor_tour_submit", {
                         ":has(.s_website_form_field:has(label:contains('Your Message')).o_has_error)" +
                         ":has(.s_website_form_field:has(label:contains('Products')).o_has_error)" +
                         ":has(.s_website_form_field:has(label:contains('Service')):not(.o_has_error))" +
-                        ":has(.s_website_form_field:has(label:contains('State')):not(.o_has_error))" +
+                        ":has(.s_website_form_field:has(label:contains('State')).o_has_error)" +
                         ":has(.s_website_form_field:has(label:contains('Invoice Scan')):not(.o_has_error))",
         trigger:  "input[name=subject]",
         run:      "text Jane Smith"
@@ -62,7 +63,7 @@ tour.register("website_form_editor_tour_submit", {
                         ":has(.s_website_form_field:has(label:contains('Your Message')).o_has_error)" +
                         ":has(.s_website_form_field:has(label:contains('Products')).o_has_error)" +
                         ":has(.s_website_form_field:has(label:contains('Service')):not(.o_has_error))" +
-                        ":has(.s_website_form_field:has(label:contains('State')):not(.o_has_error))" +
+                        ":has(.s_website_form_field:has(label:contains('State')).o_has_error)" +
                         ":has(.s_website_form_field:has(label:contains('Invoice Scan')):not(.o_has_error))",
         trigger:  "textarea[name=body_html]",
         run:      "text A useless message"
@@ -82,7 +83,7 @@ tour.register("website_form_editor_tour_submit", {
                         ":has(.s_website_form_field:has(label:contains('Your Message')):not(.o_has_error))" +
                         ":has(.s_website_form_field:has(label:contains('Products')).o_has_error)" +
                         ":has(.s_website_form_field:has(label:contains('Service')):not(.o_has_error))" +
-                        ":has(.s_website_form_field:has(label:contains('State')):not(.o_has_error))" +
+                        ":has(.s_website_form_field:has(label:contains('State')).o_has_error)" +
                         ":has(.s_website_form_field:has(label:contains('Invoice Scan')):not(.o_has_error))",
         trigger:  "input[name=Products][value='Wiko Stairway']"
     },
@@ -97,6 +98,11 @@ tour.register("website_form_editor_tour_submit", {
     {
         content:  "Check a service",
         trigger:  "input[name='Service'][value='Development Service']"
+    },
+    {
+        content:  "Select a State",
+        trigger:  "select[name='State']",
+        run:      "text Canada",
     },
     {
         content:  "Complete Your Name field",
@@ -138,6 +144,11 @@ tour.register("website_form_editor_tour_submit", {
         trigger: "input[name='email_cc']",
     },
     {
+        content: "Select state option",
+        trigger: "select[name='State']",
+        run: 'text 44 - UK',
+    },
+    {
         content:  "Send the form",
         trigger:  ".s_website_form_send"
     },
@@ -161,7 +172,7 @@ tour.register("website_form_editor_tour_results", {
                         ['email_to', '=', 'test@test.test'],
                         ['body_html', 'like', 'A useless message'],
                         ['body_html', 'like', 'Service : Development Service'],
-                        ['body_html', 'like', 'State : Belgium'],
+                        ['body_html', 'like', 'State : 44 - UK'],
                         ['body_html', 'like', 'Products : Xperia,Wiko Stairway']
                     ]],
                 });
@@ -199,5 +210,15 @@ tour.register('website_form_contactus_submit', {
     {
         content: 'Check form is submitted without errors',
         trigger: '#wrap:has(h1:contains("Thank You!"))',
+    },
+]);
+tour.register('website_form_contactus_check_changed_email', {
+    test: true,
+    url: '/contactus',
+}, [
+    {
+        content: "Check that the recipient email is updated",
+        trigger: 'form:has(input[name="email_to"][value="after.change@mail.com"])',
+        run: () => null, // it's a check.
     },
 ]);

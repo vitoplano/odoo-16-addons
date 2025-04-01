@@ -44,12 +44,6 @@ export class VideoSelector extends Component {
                 urlParameter: 'fs=0',
                 isHidden: () => this.state.options.filter(option => option.id === 'hide_controls')[0].value,
             },
-            hide_yt_logo: {
-                label: this.env._t("Hide Youtube logo"),
-                platforms: [this.PLATFORMS.youtube],
-                urlParameter: 'modestbranding=1',
-                isHidden: () => this.state.options.filter(option => option.id === 'hide_controls')[0].value,
-            },
             hide_dm_logo: {
                 label: this.env._t("Hide Dailymotion logo"),
                 platforms: [this.PLATFORMS.dailymotion],
@@ -89,11 +83,11 @@ export class VideoSelector extends Component {
 
         onMounted(async () => {
             await Promise.all(this.props.vimeoPreviewIds.map(async (videoId) => {
-                const { thumbnail_url: thumbnailSrc } = await this.http.get(`https://vimeo.com/api/oembed.json?url=http%3A//vimeo.com/${videoId}`);
+                const { thumbnail_url: thumbnailSrc } = await this.http.get(`https://vimeo.com/api/oembed.json?url=http%3A//vimeo.com/${encodeURIComponent(videoId)}`);
                 this.state.vimeoPreviews.push({
                     id: videoId,
                     thumbnailSrc,
-                    src: `https://player.vimeo.com/video/${videoId}`
+                    src: `https://player.vimeo.com/video/${encodeURIComponent(videoId)}`
                 });
             }));
         });
@@ -155,10 +149,12 @@ export class VideoSelector extends Component {
         if (!src) {
             this.state.errorMessage = this.env._t("The provided url is not valid");
         } else if (!platform) {
-            this.env._t("The provided url does not reference any supported video");
+            this.state.errorMessage =
+                this.env._t("The provided url does not reference any supported video");
         } else {
             this.state.errorMessage = '';
         }
+        this.props.errorMessages(this.state.errorMessage);
 
         const newOptions = [];
         if (platform && platform !== this.state.platform) {
