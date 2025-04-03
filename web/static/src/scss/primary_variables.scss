@@ -9,9 +9,6 @@ $o-frontend-min-contrast-ratio: 4.5 !default;
 // Color-scheme
 $o-webclient-color-scheme: bright !default;
 
-// FIX Variabiles
-$o-filter-colors: $o-colors !default;
-
 // General Font sizes
 $o-root-font-size: 15px !default;
 $o-font-size-base: 15rem * (1px / $o-root-font-size) !default;
