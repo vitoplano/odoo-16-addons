@@ -15,7 +15,10 @@ class ReportTimesheet(models.AbstractModel):
         return f"{hours:02d}:{minutes:02d}"
 
     def get_timesheets(self, docs):
-        domain = [('user_id', '=', docs.user_id[0].id)]
+        domain = [
+            ('user_id', '=', docs.user_id[0].id)
+            ('project_id', '!=', False)
+        ]
         if docs.from_date:
             domain.append(('date', '>=', docs.from_date))
         if docs.to_date:
@@ -30,7 +33,7 @@ class ReportTimesheet(models.AbstractModel):
         }
 
         for rec in record:
-            project_name = rec.project_id.name or 'No Project'
+            project_name = rec.project_id.name
             task_name = rec.task_id.name or 'No Task'
 
             entry = {
