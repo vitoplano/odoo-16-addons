@@ -16,7 +16,7 @@ class ReportTimesheet(models.AbstractModel):
 
     def get_timesheets(self, docs):
         domain = [
-            ('user_id', '=', docs.user_id[0].id)
+            ('user_id', '=', docs.user_id[0].id),
             ('project_id', '!=', False)
         ]
         if docs.from_date:
